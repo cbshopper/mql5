@@ -1,0 +1,42 @@
+# do not ignore the following files
+!.gitattributes
+
+# ignore Eclipse directories and files
+/.externalToolBuilders/
+/.settings/
+/.buildpath
+/.project*
+
+# ignore the following directories and files
+/bin/experts
+/etc/windows/appdata/*
+mqlcache*
+*.ex4
+*.ex5
+*.lck
+*.set
+*.lnk
+*.ffs_*
+
+
+# ignore DLL related files
+/libraries/*.Debug.dll
+/libraries/*.Release.dll
+
+# ignore log related/generated/linked files in MQL4.5 and MQL5 structures
+/Files
+/files
+/Images
+/Logs
+/logs
+/Presets
+/presets
+/Projects
+/src
+/Shared Projects
+/testing
+/profiles
+/Profiles
+
+# ignore files created by the tester
+/tester/

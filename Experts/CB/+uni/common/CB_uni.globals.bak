@@ -1,0 +1,90 @@
+//+------------------------------------------------------------------+
+//|                                                      ProjectName |
+//|                                      Copyright 2018, CompanyName |
+//|                                       http://www.companyname.net |
+//+------------------------------------------------------------------+
+
+
+#include <CB_Draw.mqh>
+#include <CB_IMAX.mqh>
+
+
+
+#ifdef EXPERT
+//*===========================================================================================
+// global vars for Expert
+//*===========================================================================================
+#define BARCOUNT 5
+double IndBuffer0[BARCOUNT];
+double IndBuffer1[BARCOUNT];
+double IndBuffer2[BARCOUNT];
+double IndBuffer3[BARCOUNT];
+double IndBuffer4[BARCOUNT];
+double IndBuffer5[BARCOUNT];
+double Help0[BARCOUNT];
+double Help1[BARCOUNT];
+void InitArrays()
+  {
+   ArrayFill(IndBuffer0,0,BARCOUNT,0);
+   ArrayFill(IndBuffer1,0,BARCOUNT,0);
+   ArrayFill(IndBuffer2,0,BARCOUNT,0);
+   ArrayFill(IndBuffer3,0,BARCOUNT,0);
+   ArrayFill(IndBuffer4,0,BARCOUNT,0);
+   ArrayFill(IndBuffer5,0,BARCOUNT,0);
+   ArrayFill(Help0,0,BARCOUNT,0);
+   ArrayFill(Help1,0,BARCOUNT,0);
+
+   ArraySetAsSeries(IndBuffer0,true);
+   ArraySetAsSeries(IndBuffer1,true);
+   ArraySetAsSeries(IndBuffer2,true);
+   ArraySetAsSeries(IndBuffer3,true);
+   ArraySetAsSeries(IndBuffer4,true);
+   ArraySetAsSeries(IndBuffer5,true);
+   ArraySetAsSeries(Help0,true);
+   ArraySetAsSeries(Help1,true);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int GetEASignal(int shift)
+  {
+
+   double sigpos=0;
+
+   int   signal = 0;
+   if(Bars < 2*MaPeriod)
+      return 0;
+
+  // InitArrays();
+
+   for(int i = BARCOUNT-1; i >=0 ; i--)
+     {
+      GetIndicatorSignal(shift+i,IndBuffer0,IndBuffer1,IndBuffer2, IndBuffer3,IndBuffer4,IndBuffer5,Help0,Help1);
+     }
+
+
+   signal = GetIndicatorSignal(shift,IndBuffer0,IndBuffer1,IndBuffer2, IndBuffer3,IndBuffer4,IndBuffer5,Help0,Help1);
+   if(signal > 0)
+     {
+      sigpos = Low[shift+1];  //ma0;
+      Print(__FUNCTION__, ": ++ Open BUY ", TimeToStr(Time[shift]));
+      DrawDot("maOpen0", shift, sigpos, clrBlue, 233);
+     }
+
+   if(signal < 0)
+     {
+      sigpos = High[shift+1];  //ma0;
+      Print(__FUNCTION__, ": ++ Open SELL ", TimeToStr(Time[shift]));
+      DrawDot("maOpen0", shift, sigpos, clrRed, 234);
+     }
+   return signal;
+  }
+//*===========================================================================================
+
+#endif
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+void ClearDrawings()
+  {
+   ObjectsDeleteAll(0, "maup");
+  }

@@ -7,7 +7,33 @@
 #include <cb\CB_IMAX.mqh>
 
 
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int GetSignalAndValues(int shift, double &IndBuffer0[],double &IndBuffer1[],double &IndBuffer2[],
+                       double &IndBuffer3[],double &IndBuffer4[],double &IndBuffer5[],
+                       double &Help0[],double &Help1[])
+  {
+       double nulval =0; //EMPTY_VALUE
+      IndBuffer0[shift] = nulval;
+      IndBuffer1[shift] = nulval;
+      IndBuffer2[shift] = nulval;
+      IndBuffer3[shift] = nulval;
+      IndBuffer4[shift] = nulval;
+      IndBuffer5[shift] = nulval;
+      
+    //  if (BarRange==0) BarRange=1;
+      
+      GetValues(shift,IndBuffer0, IndBuffer1,IndBuffer2,IndBuffer3,IndBuffer4,IndBuffer5, Help0,Help1);
+      int signal = GetSignal(shift,BarRange,MinSignalScore);
+      signal = FilterSignal(signal, shift);
+   if (signal !=0)
+      {
+        lastSignalTime = iTime(NULL,0,shift);
+        lastSignal= signal;
+      }
+   return signal;
+  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -43,7 +69,7 @@ input int Filter=1;
 input int Ma1Period=28;
 input double Ma2Factor=2.0;
 input double Ma3Factor=6.0;
-input int MinBarPoints=10;
+
 #else
 
 ENUM_MMA_METHOD Ma1Method = MMODE_HULLMA;
@@ -54,7 +80,7 @@ int Filter=1;
 int Ma1Period=28;
 double Ma2Factor=2.0;
 double Ma3Factor=6.0;
- int MinBarPoints=10;
+
 #endif
 
 ENUM_APPLIED_PRICE Ma1Price=PRICE_OPEN;
@@ -153,28 +179,7 @@ void SetSignalInfo(string info)
      }
   }
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-int GetSignalSingleRAW(double ma00, double ma01,double ma02, int shift)
-  {
-   int ret = 0;
-   bool enable_buy =  false;
-   bool enable_sell = false;
 
-  // enable_buy =  ma02 > ma01 && ma00 > ma01 && ma00 > ma02 && MathAbs(ma01-ma00) > 5*Point();
-  // enable_sell = ma02 < ma01 && ma00 < ma01  && ma00 < ma02 && MathAbs(ma01-ma00) > 5*Point();
-   double price0 = iOpen(NULL,0,shift);
-   double price1 = iOpen(NULL,0,shift+1);
-   if (MathAbs(price0-price1) > MinBarPoints*Point())
-   {
-   enable_buy =  price0 > ma00 && price1 < ma01 ;
-   enable_sell =  price0 < ma00 && price1 > ma01 ;
-   }
-  // GETSIGNAL
-   ret = GETSIGNAL("1MAPrice",enable_buy,enable_sell,shift);
-   return ret;
-  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -185,8 +190,8 @@ int GetSignalSingle(double ma00, double ma01,double ma02, double ma20,double ma2
    bool enable_buy =  false;
    bool enable_sell = false;
 
-   enable_buy =  ma02 > ma01 && ma00 > ma01; //  && ma20 > ma21;  //&& iOpen(NULL,0,shift) <  ma20
-   enable_sell = ma02 < ma01 && ma00 < ma01; //  && ma20 < ma21;  //&& iOpen(NULL,0,shift) >  ma20 
+   enable_buy =  ma02 > ma01 && ma00 > ma01 && iOpen(NULL,0,shift) <  ma20  && ma20 > ma21;
+   enable_sell = ma02 < ma01 && ma00 < ma01 && iOpen(NULL,0,shift) >  ma20  && ma20 < ma21;
 // GETSIGNAL
    ret = GETSIGNAL("1MATurn",enable_buy,enable_sell,shift);
    return ret;
@@ -202,8 +207,8 @@ int GetSignalCross(double ma00, double ma01,double ma02, double ma10, double ma1
    bool enable_buy =  false;
    bool enable_sell = false;
 
-   enable_buy =  ma01 < ma11 && ma00 > ma10  && ma02 < ma12 ;
-   enable_sell =  ma01 > ma11 && ma00 < ma10 && ma02 > ma12;
+   enable_buy =  ma00 > ma10 && ma01 < ma11 && ma02 < ma12 ;
+   enable_sell =  ma00 < ma10 && ma01 > ma11 && ma02 > ma12;
 
 
 // GETSIGNAL

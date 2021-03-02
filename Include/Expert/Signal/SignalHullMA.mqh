@@ -8,9 +8,9 @@
 // wizard description start
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //| Description of the class                                         |
-//| Title=Signals of indicator 'Hull Moving Average'                 |
+//| Title=Signals of indicator 'Hull Moving Average Turn'            |
 //| Type=SignalAdvanced                                              |
-//| Name=Hull Moving Average                                         |
+//| Name=Hull Moving Average Turn                                    |
 //| ShortName=HullMA                                                 |
 //| Class=CSignalHullMA                                              |
 //| Page=signal_ma                                                   |
@@ -63,8 +63,24 @@ protected:
    double            MA(int ind)                         { return(m_ma.calculate(ind));     }
    //  bool              TurnUp(int ind)                   {Print(__FUNCTION__," ;MA(ind)=",MA(ind),"MA(ind+1)=",MA(ind+1),"MA(ind+2)=",MA(ind+2)); return(MA(ind+2)>MA(ind+1) && MA(ind)>MA(ind+1));  }
    //  bool              TurnDown(int ind)                 {Print(__FUNCTION__," ;MA(ind)=",MA(ind),"MA(ind+1)=",MA(ind+1),"MA(ind+2)=",MA(ind+2)); return(MA(ind+2)<MA(ind+1) && MA(ind)<MA(ind+1));  }
-   bool              TurnUp(int ind)                   { DrawDot(__FUNCTION__,ind,MA(ind));  return(MA(ind+2)>MA(ind+1) && MA(ind)>MA(ind+1) && MA(ind) >= MA(ind+2)) ;  }
-   bool              TurnDown(int ind)                 { DrawDot(__FUNCTION__,ind,MA(ind));   return(MA(ind+2)<MA(ind+1) && MA(ind)<MA(ind+1) && MA(ind) <= MA(ind+2));  }
+   bool              TurnUp(int ind)
+     {
+     
+     // Print(__FUNCTION__," ;MA(ind)=",MA(ind));
+      bool ret = MA(ind+2)>MA(ind+1) && MA(ind)>MA(ind+1); // && MA(ind) >= MA(ind+2);
+     if (ret) 
+       DrawDot("BUY!",ind,MA(ind),clrBlue,116,1);
+      return(ret) ;
+     }
+   bool              TurnDown(int ind)
+     {
+      
+   //   Print(__FUNCTION__," ;MA(ind)=",MA(ind));
+      bool ret = MA(ind+2)<MA(ind+1) && MA(ind)<MA(ind+1); // && MA(ind) <= MA(ind+2);
+       if (ret) 
+        DrawDot("SELL!",ind,MA(ind),clrRed,116,1);
+      return(ret);
+     }
    void              DrawDot(string name, int shift, double price, color clr = clrBlue, int code = 159, int width = 1);
   };
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -75,7 +91,7 @@ CSignalHullMA::CSignalHullMA(void) : m_ma_period(12),
 // m_ma_method(MODE_SMA),
    m_ma_divisor(2.0),
    m_ma_applied(PRICE_CLOSE),
-   m_pattern_0(80)
+   m_pattern_0(100)
   {
 //+++ initialization of protected data
    m_used_series=USE_SERIES_OPEN+USE_SERIES_HIGH+USE_SERIES_LOW+USE_SERIES_CLOSE;
@@ -183,8 +199,8 @@ int CSignalHullMA::ShortCondition(void)
 //+------------------------------------------------------------------+
 void CSignalHullMA:: DrawDot(string name, int shift, double price, color clr = clrBlue, int code = 159, int width = 1)
   {
-   if(Bars(NULL,0) - 1 < shift)
-      return;
+//   if(Bars(NULL,0) - 1 < shift)
+//      return;
 // print(__FUNCTION__,"Bars(NULL,0)="+ Bars(NULL,0));
    string EMAName = name + (string)iTime(NULL,0,shift);
 
@@ -192,11 +208,15 @@ void CSignalHullMA:: DrawDot(string name, int shift, double price, color clr = c
      {
       ObjectDelete(0,EMAName);
      }
-   ObjectCreate(0, EMAName, OBJ_ARROW_BUY, 0, iTime(NULL, 0, shift), price);
-   ObjectSetInteger(0, EMAName, OBJPROP_ARROWCODE, code);
-   ObjectSetInteger(0,EMAName, OBJPROP_WIDTH, width);
-//  ObjectCreate(EMAName,OBJ_ELLIPSE,0,iTime(NULL,0,shift),val0,iTime(NULL,0,shift),val0);
-   ObjectSetInteger(0, EMAName, OBJPROP_COLOR, clr);
-
+   if(ObjectCreate(0, EMAName, OBJ_ARROW, 0, 0,0))
+     {
+      ObjectSetInteger(0, EMAName, OBJPROP_ARROWCODE, (uchar)code);
+      ObjectSetInteger(0,EMAName, OBJPROP_WIDTH, width);
+      ObjectSetInteger(0, EMAName, OBJPROP_COLOR, clr);
+       ObjectSetDouble(0,EMAName,OBJPROP_PRICE,price);// Set price
+       ObjectSetInteger(0,EMAName,OBJPROP_TIME,iTime(NULL, 0, shift));   
+      ChartRedraw(0);                                        // Draw arrow now
+      Print(__FUNCTION__," EMAName="+EMAName, " Price=",price);
+     }
   }
 //+------------------------------------------------------------------+

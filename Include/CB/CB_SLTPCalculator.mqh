@@ -172,9 +172,9 @@ void CalculateTPSL(int iStoploss, int iTakeprofit, double lots,double crv, int m
       if(x > tp || tp==0)
          tp =x;
      }
-   if(tp >0)
+  // if(tp >0)
       takeprofit=tp;
-   if(sl >0)
+ //  if(sl >0)
       stoploss=sl;
   }
 
@@ -232,26 +232,28 @@ int CalculateATR_SL(int shift)
 //+------------------------------------------------------------------+
 int CalculateLastHILOStop(int mode, int shift)
   {
-   double stopvalue = 0;
+  double stopvalue = 0;
    double ret=0;
    int hilobar = 0;
-   double stopLevel = SymbolInfoInteger(Symbol(), SYMBOL_TRADE_STOPS_LEVEL);
-// double tickvalue = SymbolInfoDouble(Symbol(), SYMBOL_TRADE_TICK_VALUE);    //MarketInfo(Symbol(), MODE_TICKVALUE);
-
+   double stopLevel = MarketInfo(Symbol(), MODE_STOPLEVEL);
+   double tickvalue = MarketInfo(Symbol(), MODE_TICKVALUE);
+   double price = iOpen(NULL,0,shift);
    if(mode == OP_BUY)
      {
+     // price = Ask;
       hilobar = iLowest(NULL, 0, MODE_LOW, HILOBackBars, shift + 1);
-      stopvalue = iLow(NULL, 0,hilobar);
-      ret = MathAbs(Ask() - stopvalue) / Point();
+      stopvalue = iLow(NULL,0,hilobar);
+      ret = MathAbs(price - stopvalue) / Point();
      }
 
    if(mode == OP_SELL)
      {
+     // price=Bid;
       hilobar = iHighest(NULL, 0, MODE_HIGH, HILOBackBars, shift + 1);
-      stopvalue = iHigh(NULL, 0,hilobar);
-      ret = MathAbs(stopvalue - Bid()) / Point();
+      stopvalue = iHigh(NULL,0,hilobar);
+      ret = MathAbs(stopvalue - price) / Point();
      }
-   if(ret > MaxSL)
+   if(ret > MaxSL && MaxSL > 0)
       ret = MaxSL;
    if(ret < stopLevel)
       ret = (int)stopLevel; // This may rise the risk over the reques

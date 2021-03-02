@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                    HullTrend.mq5 |
+//|                                                     Hull0fix.mq5 |
 //|                        Copyright 2021, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -11,41 +11,44 @@
 //+------------------------------------------------------------------+
 #include <Expert\Expert.mqh>
 //--- available signals
+#include <Expert\Signal\SignalHullMA2.mqh>
 #include <Expert\Signal\SignalHullMA.mqh>
-#include <Expert\Signal\SignalMA.mqh>
+#include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
-#include <Expert\Trailing\TrailingParabolicSAR.mqh>
+#include <Expert\Trailing\TrailingNone.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
 //--- inputs for expert
-input string             Expert_Title                 ="HullTrend"; // Document name
-ulong                    Expert_MagicNumber           =5629;        //
-bool                     Expert_EveryTick             =false;       //
+input string             Expert_Title          ="HullHull";  // Document name
+ulong                    Expert_MagicNumber    =7091;        //
+bool                     Expert_EveryTick      =false;       //
 //--- inputs for main signal
-input int                Signal_ThresholdOpen         =10;          // Signal threshold value to open [0...100]
-input int                Signal_ThresholdClose        =10;          // Signal threshold value to close [0...100]
-input double             Signal_PriceLevel            =0.0;         // Price level to execute a deal
-input double             Signal_StopLevel             =50.0;        // Stop Loss level (in points)
-input double             Signal_TakeLevel             =50.0;        // Take Profit level (in points)
-input int                Signal_Expiration            =4;           // Expiration of pending orders (in bars)
-input int                Signal_HullMA_PeriodMA       =12;          // Hull Moving Average(12,2,...) Period of averaging
-input double             Signal_HullMA_Divisor        =2;           // Hull Moving Average(12,2,...) Hull Divisor
-input ENUM_APPLIED_PRICE Signal_HullMA_Applied        =PRICE_CLOSE; // Hull Moving Average(12,2,...) Prices series
-input double             Signal_HullMA_Weight         =1.0;         // Hull Moving Average(12,2,...) Weight [0...1.0]
-input int                Signal_MA_PeriodMA           =60;          // Moving Average(60,0,...) Period of averaging
-input int                Signal_MA_Shift              =0;           // Moving Average(60,0,...) Time shift
-input ENUM_MA_METHOD     Signal_MA_Method             =MODE_SMA;    // Moving Average(60,0,...) Method of averaging
-input ENUM_APPLIED_PRICE Signal_MA_Applied            =PRICE_CLOSE; // Moving Average(60,0,...) Prices series
-input double             Signal_MA_Weight             =1.0;         // Moving Average(60,0,...) Weight [0...1.0]
-//--- inputs for trailing
-input double             Trailing_ParabolicSAR_Step   =0.01;        // Speed increment
-input double             Trailing_ParabolicSAR_Maximum=0.1;         // Maximum rate
+input int                Signal_ThresholdOpen  =10;          // Signal threshold value to open [0...100]
+input int                Signal_ThresholdClose =10;          // Signal threshold value to close [0...100]
+input double             Signal_PriceLevel     =0.0;         // Price level to execute a deal
+input double             Signal_StopLevel      =50.0;        // Stop Loss level (in points)
+input double             Signal_TakeLevel      =50.0;        // Take Profit level (in points)
+input int                Signal_Expiration     =4;           // Expiration of pending orders (in bars)
+
+input int                Signal_HullMA_PeriodMA=12;          // Hull Moving Average(12,2.0,...) Period of averaging
+input double             Signal_HullMA_Divisor =2.0;         // Hull Moving Average(12,2.0,...) Hull Divisor
+input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average(12,2.0,...) Prices series
+input double             Signal_HullMA_Weight  =1.0;         // Hull Moving Average(12,2.0,...) Weight [0...1.0]
+
+//input int                Signal_HullMA_PeriodMA=12;          // Hull Moving Average Turn(12,...) Period of averaging
+//input double             Signal_HullMA_Divisor =2.0;         // Hull Moving Average Turn(12,...) Hull Divisor
+//input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average Turn(12,...) Prices series
+input double             Signal_HullMATurn_Weight  =1.0;         // Hull Moving Average Turn(12,...) Weight [0...1.0]
+input int                Signal_STF_TrendPeriod=50;          // SignalTrendFilter(50,...) Trend Period
+input ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
+input int                Signal_STF_TrendMiniff=0;           // SignalTrendFilter(50,...) Trend Period min.Diff
+input double             Signal_STF_Weight     =1.0;         // SignalTrendFilter(50,...) Weight [0...1.0]
 //--- inputs for money
-input double             Money_FixLot_Percent         =10.0;        // Percent
-input double             Money_FixLot_Lots            =0.1;         // Fixed volume
+input double             Money_FixLot_Percent  =10.0;        // Percent
+input double             Money_FixLot_Lots     =0.1;         // Fixed volume
 //+------------------------------------------------------------------+
 //| Global expert object                                             |
 //+------------------------------------------------------------------+
@@ -63,6 +66,7 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
+     ExtExpert.MaxOrders(10);
 //--- Creating signal
    CExpertSignal *signal=new CExpertSignal;
    if(signal==NULL)
@@ -80,9 +84,8 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-   
-//--- Creating filter CSignalHullMA
-   CSignalHullMA *filter0=new CSignalHullMA;
+//--- Creating filter CSignalHullMA2
+   CSignalHullMA2 *filter0=new CSignalHullMA2;
    if(filter0==NULL)
      {
       //--- failed
@@ -91,16 +94,13 @@ int OnInit()
       return(INIT_FAILED);
      }
    signal.AddFilter(filter0);
-   
 //--- Set filter parameters
    filter0.PeriodMA(Signal_HullMA_PeriodMA);
    filter0.Divisor(Signal_HullMA_Divisor);
    filter0.Applied(Signal_HullMA_Applied);
    filter0.Weight(Signal_HullMA_Weight);
-
-
-//--- Creating filter CSignalMA
-   CSignalMA *filter1=new CSignalMA;
+//--- Creating filter CSignalHullMA
+   CSignalHullMA *filter1=new CSignalHullMA;
    if(filter1==NULL)
      {
       //--- failed
@@ -110,15 +110,12 @@ int OnInit()
      }
    signal.AddFilter(filter1);
 //--- Set filter parameters
-   filter1.PeriodMA(Signal_MA_PeriodMA);
-   filter1.Shift(Signal_MA_Shift);
-   filter1.Method(Signal_MA_Method);
-   filter1.Applied(Signal_MA_Applied);
-   filter1.Weight(Signal_MA_Weight);
-
-
+   filter1.PeriodMA(Signal_HullMA_PeriodMA);
+   filter1.Divisor(Signal_HullMA_Divisor);
+   filter1.Applied(Signal_HullMA_Applied);
+   filter1.Weight(Signal_HullMATurn_Weight);
 //--- Creation of trailing object
-   CTrailingPSAR *trailing=new CTrailingPSAR;
+   CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
      {
       //--- failed
@@ -135,8 +132,6 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Set trailing parameters
-   trailing.Step(Trailing_ParabolicSAR_Step);
-   trailing.Maximum(Trailing_ParabolicSAR_Maximum);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

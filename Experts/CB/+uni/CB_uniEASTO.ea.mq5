@@ -15,13 +15,13 @@ input  string SIGNAL_Settings = "--------  SIGNAL Settings -------------";
 input  int BarRange=1;
 input  int MinSignalScore=1;
 input  string SIGSEL_Settings = "--------  SIGNAL Selection -------------";
-input  int Signal1MATurn0=0;
-input  int Signal1MATurn=0;
-input  int SignalSAR=0;
-input  int Signal2MACross=0;
-input  int Signal3MACross=0;
-input  int SignalMACD=0;
-input  int SignalSTO=0;
+
+  int Signal1MATurn=0;
+  int SignalSAR=0;
+  int Signal2MACross=0;
+  int Signal3MACross=0;
+  int SignalMACD=0;
+  int SignalSTO=1;
 //input  int SignalRSISTO=0;
 //input  int SignalMASTO=0;
 
@@ -41,15 +41,15 @@ input int CloseByATRTP=0;
 input int CloseByRiskSL=0;
 input int CloseByRiskTP=0;
 input int CloseByStopMa = 0;
-input int CloseByMaCross = 0;
+ int CloseByMaCross = 0;
 input int CloseBySAR=1;
 input int CloseByOpositeSignal=0;
-input int CloseByTimeSignal=0;
+ int CloseByTimeSignal=0;
 
 
 
 // #define TESTING
-#include "common\CB_Commons.mqh"
+//#include "common\CB_Commons.mqh"
 #include "signals\CB_uniSignal.mqh"
 #include "signals\CB_uniSignalLib.mqh"
 #include "common\CB_uniFilter1.mqh"

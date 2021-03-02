@@ -12,11 +12,11 @@
 //| Type=SignalAdvanced                                              |
 //| Name=SignalTrendFilter                                           |
 //| ShortName=STF                                                    |
-//| Class=CSignalITF                                                 |
+//| Class=CSignalTrend                                                 |
 //| Page=signal_trend_filter                                         |
 //| Parameter=TrendPeriod,int,50,Trend Period                             |
 //| Parameter=TrendMethod,ENUM_MA_METHOD,MODE_SMA,Method of averaging     |
-//| Parameter=TrendMiniff,int,0,Trend Period min.Diff                    |
+//| Parameter=TrendMindiff,int,0,Trend Period min.Diff                    |
 //+------------------------------------------------------------------+
 // wizard description end
 //+------------------------------------------------------------------+
@@ -28,30 +28,34 @@ class CSignalTrend : public CExpertSignal
   {
 protected:
    //--- input parameters
-   int               m_period;
-   ENUM_MA_METHOD    m_method;
-   int               m_mindiff;
-   int               m_ptr;
+   int               trend_period;
+   ENUM_MA_METHOD    trend_method;
+   int               trend_mindiff;
+   int               trend_ptr;
 
 public:
-                     CSignalITF(void);
-                    ~CSignalITF(void);
+                     CSignalTrend(void);
+                    ~CSignalTrend(void);
    //--- methods initialize protected data
-   void              TrendPeriod(int value)  { m_period=value; }
-    void             TrendMethod(int value)  { m_method=value; }
-   void              TrendMindiff(int value)     { m_mindiff=value;    }
+   void              TrendPeriod(int value)  { trend_period=value; }
+//    void             TrendMethod(int value)  { trend_method=value; }
+   void              TrendMindiff(int value)     { trend_mindiff=value;    }
    //--- methods of checking conditions of entering the market
-   virtual double    Direction(void);
+  virtual double    Direction(void);
+   //+++ methods of checking if the market models are formed
+   //virtual int       LongCondition(void);
+   //virtual int       ShortCondition(void);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
-CSignalTrend::CSignalTrend(void) : m_period(50),
-                               m_method(MODE_EMA),
-                               m_mindiff(0),
-                               m_ptr(INVALID_HANDLE)
+CSignalTrend::CSignalTrend(void) : trend_period(50),
+ //                              trend_method(MODE_EMA),
+                               trend_mindiff(0),
+                               trend_ptr(INVALID_HANDLE)
   {
-    m_ptr=iMA(symbol,period,ma_period,0,ma_method,PRICE_CLOSE);
+    
+    trend_ptr=iTriX(NULL,m_period,trend_period,PRICE_CLOSE);
   }
 //+------------------------------------------------------------------+
 //| Destructor                                                       |
@@ -60,6 +64,7 @@ CSignalTrend::~CSignalTrend(void)
   {
      
   }
+  
 //+------------------------------------------------------------------+
 //| Check conditions for time filter.                                |
 //+------------------------------------------------------------------+
@@ -67,11 +72,44 @@ double CSignalTrend::Direction(void)
   {
    int idx   =StartIndex();
 //---
-   double m0 = GetIndicatorValue(m_ptr,idx);
-   double m1 == GetIndicatorValue(m_ptr,idx+1);
+   double m0 = GetIndicatorValue(trend_ptr,idx);
+   double m1 = GetIndicatorValue(trend_ptr,idx+1);
    
-   if (m)
+   if (m0 > m1) return (TREND_UP); 
+   if (m0 < m1  ) return (TREND_DN) ;
 //--- condition OK
    return(0.0);
   }
+ 
 //+------------------------------------------------------------------+
+/*
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//| "Voting" that price will grow.                                   |
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int CSignalTrend::LongCondition(void)
+  {
+   int result=0;
+   int idx   =StartIndex();
+   double m0 = GetIndicatorValue(trend_ptr,idx);
+   double m1 = GetIndicatorValue(trend_ptr,idx+1);
+   if (m0 < m1  ) result = TREND_DN; //--- the "prohibition" signal
+ //  result = EMPTY_VALUE;
+ //  Print(__FUNCTION__," Result=",result);
+//+++ return the result
+   return(result);
+  }
+  
+  
+int CSignalTrend::ShortCondition(void)
+  {
+    int result=0;
+   int idx   =StartIndex();
+   double m0 = GetIndicatorValue(trend_ptr,idx);
+   double m1 = GetIndicatorValue(trend_ptr,idx+1);
+  if (m0 > m1  ) result = TREND_UP; //--- the "prohibition" signal
+//  result = EMPTY_VALUE;
+//   Print(__FUNCTION__," Result=",result);
+//+++ return the result
+   return(result);
+  }
+*/

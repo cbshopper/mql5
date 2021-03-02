@@ -5,6 +5,9 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2021, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
+
+#ifndef CB_INDICATOR_HELPER
+#define CB_INDICATOR_HELPER
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -31,3 +34,5 @@ double GetIndicatorBufferValue(int handle, int index,int bufferno)
      }
    return ret;
   }
+  
+ #endif

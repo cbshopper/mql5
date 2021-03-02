@@ -14,6 +14,7 @@ Die Berechnung des Hull Moving Average erfolgt in 3 Schritten.
 
 */
 #include <cb\CBUtils5.mqh>
+#include <cb\CB_IndicatorHelper.mqh>
 #include <cb\CB_MAUtils.mqh>
 #include <MovingAverages.mqh>
 //+------------------------------------------------------------------+
@@ -64,7 +65,10 @@ public :
       ArrayResize(rates,cnt);
       return true;
      }
-
+    void              deinit()
+     {
+       ArrayFree(priceArr);ArrayFree(workHull);
+     }
    double            calculateFilter(long shift, int filter)
      {
       double ret=calculate(shift);
@@ -83,7 +87,8 @@ public :
      {
       double ret = 0;
       //   ArraySetAsSeries(rates,false);
-      if (shift <0) return 0;
+      if(shift <0)
+         return 0;
       long copied=CopyRates(Symbol(),0,shift,cnt,rates);
       if(copied >= cnt)
         {
@@ -146,7 +151,10 @@ public:
                      CHullEA()   : m_period(1),
                      m_price(PRICE_CLOSE)
      {      m_period = 0;              }
+                    
                     ~CHullEA()       { ArrayFree(warr);  }
+                    
+                    
    bool              init(int period, double divisor, ENUM_APPLIED_PRICE price)
      {
       m_period = period;
@@ -161,6 +169,8 @@ public:
       ArrayResize(warr, SqrtPeriod  + 1);
       return true;
      }
+
+   
    //+------------------------------------------------------------------+
    //|                                                                  |
    //+------------------------------------------------------------------+

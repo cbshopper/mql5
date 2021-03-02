@@ -9,7 +9,7 @@
 //extern double trend0,trend1;
 //extern bool check_Trend;
 
-//int FirstBar=1;
+int FirstBar=3;
 
 //---- input parameters
 string IndNames[6] = {"Ma1","Ma2","Ma3","SAR","TrendMA","StopMA"};
@@ -21,21 +21,18 @@ color IndColors[6] = {clrRed, clrBlue,clrDarkOliveGreen,clrBlack,clrGreen,clrBla
 int IndType[6] = {DRAW_LINE,DRAW_LINE,DRAW_LINE,DRAW_LINE,DRAW_LINE,DRAW_LINE};
 int IndStyles[6] = {STYLE_SOLID,STYLE_SOLID,STYLE_SOLID,STYLE_DOT,STYLE_SOLID,STYLE_SOLID};
 int IndWidths[6] = {2,2,2,1,1,1};
-#ifndef SIGNAL_SETTINGS
-input string SIGNLAL_Settings = "--------  SIGNAL Settings -------------";
-input int BarRange=1;
-input int MinSignalScore=1;
-#endif
-extern string SignalInfo;
+
 
 
 #ifndef SIGNAL_SETTINGS
 
 #ifdef SIGNALS_MA
-input int Signal1MATurn=1;
+input int Signal1MATurn0=0;
+input int Signal1MATurn=0;
 input int Signal2MACross=0;
 input int Signal3MACross=0;
 #else
+int Signal1MATurn0=0;
 int Signal1MATurn=0;
 int Signal2MACross=0;
 int Signal3MACross=0;
@@ -66,60 +63,6 @@ int SignalSTO=0;
 #endif
 
 
-int lastSignal=0;
-datetime lastSignalTime=0;
-//+------------------------------------------------------------------+
-int GetSignal(int shift,int barRange,int minSignals)
-  {
-   int ret=0;
-   if(barRange<=0)
-      barRange=1;
-   int cnt=0;
-   int lastSigalBar=0;
-   int zero_shift=shift;
-   int check_shift=shift;
-     SignalInfo="";
-
-
-   if(lastSignalTime>0)
-     {
-      lastSigalBar=iBarShift(NULL,0,lastSignalTime,true);
-      if(lastSigalBar<0)
-         lastSigalBar=0;
-     }
-   if(shift+barRange<lastSigalBar)
-     {
-      lastSignal=0;
-     }
-   if(lastSignal==0 && MinSignalScore>0)
-     {
-    
-      for(int i=shift; i<shift+barRange; i++)
-        {
-         int sig=GetSignal(i);
-         cnt+=sig;
-         if(MathAbs(cnt)>=MinSignalScore)
-            break;
-        }
-      //  Print(__FUNCTION__,": cnt=",cnt);
-      if(cnt>=MinSignalScore)   // && lastSignal<=0)
-        {
-         ret=1;
-        }
-      if(cnt<=-MinSignalScore) // && lastSignal>=0)
-        {
-         ret=-1;
-        }
-   /*
-      if (ret !=0)
-      {
-        lastSignalTime = iTime(NULL,0,shift);
-        lastSignal= ret;
-      }
-      */
-     }
-   return ret;
-  }
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -146,18 +89,18 @@ void GetValues(int shift, double &IndBuffer0[],double &IndBuffer1[],double &IndB
 
    double val=0;
 
-   if(Signal1MATurn>0 || Signal2MACross>0 || Signal3MACross>0)
+   if(Signal1MATurn0>0 ||Signal1MATurn>0 || Signal2MACross>0 || Signal3MACross>0)
      {
       //  CiMAX iMax1;
       //  iMax1.init((Ma1Period,Ma1Method,Ma1Price);
       val =iMAX(Ma1Period,Ma1Method,Ma1Price,Filter,shift);
       IndBuffer0[shift]=val;
-      if(Signal2MACross>0 || Signal3MACross>0)
+      if(Signal2MACross>0 )
         {
          val =iMAX(Ma1Period*Ma2Factor,Ma2Method,Ma2Price,Filter,shift);;
          IndBuffer1[shift]=val;
         }
-      if(Signal3MACross>0 || Signal1MATurn>0)
+      if(Signal3MACross>0 )
         {
          val =iMAX(Ma1Period*Ma3Factor,Ma3Method,Ma3Price,Filter,shift);
          IndBuffer2[shift]=val;
@@ -207,7 +150,9 @@ int GetSignal(int shift)
    double ma21 = IndBuffer2[shift+1];
    double ma22 = IndBuffer2[shift+2];
 
-
+ if(Signal1MATurn0 > 0)
+      signal += GetSignalSingleRAW(ma00, ma01,ma02,  shift)*Signal1MATurn0;
+      
    if(Signal1MATurn > 0)
       signal += GetSignalSingle(ma00, ma01,ma02, ma20,ma21,  shift)*Signal1MATurn;
 

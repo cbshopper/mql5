@@ -129,12 +129,12 @@ int GetOpenSignal(int shift)
    signal = GetSignalAndValues(shift,IndBuffer0,IndBuffer1,IndBuffer2, IndBuffer3,IndBuffer4,IndBuffer5,Help0,Help1);
 
 // id DrawValue(double &IndBuffer[],string name, int style,int col, int shift)
-   DrawValue(IndBuffer0,0,shift);
-   DrawValue(IndBuffer1,1,shift);
-   DrawValue(IndBuffer2,2,shift);
-   DrawValue(IndBuffer3,3,shift);
-   DrawValue(IndBuffer4,4,shift);
-   DrawValue(IndBuffer5,5,shift);
+   //DrawValue(IndBuffer0,0,shift);
+   //DrawValue(IndBuffer1,1,shift);
+   //DrawValue(IndBuffer2,2,shift);
+   //DrawValue(IndBuffer3,3,shift);
+   //DrawValue(IndBuffer4,4,shift);
+   //DrawValue(IndBuffer5,5,shift);
 
 
 

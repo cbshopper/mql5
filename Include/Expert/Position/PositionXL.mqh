@@ -37,12 +37,12 @@ protected:
 public:
                      CPositionInfoXL(void);
                     ~CPositionInfoXL(void);
-   int               VStoploss(void) {return v_stoploss;}
-   int               VTakeprofig(void) {return v_takeprofit;}
-   void              VStoploss(int value) { v_stoploss = value;}
-   void              VTakeprofig(int value) { v_takeprofit = value;}
-   bool              CheckTakeprofit();
-   bool              CheckStoploss();
+   int               VStopLoss(void) {return v_stoploss;}
+   int               VTakeProfit(void) {return v_takeprofit;}
+   void              VStopLoss(int value) { v_stoploss = value; }
+   void              VTakeProfit(int value) { v_takeprofit = value; }
+   bool              CheckTakeProfit();
+   bool              CheckStopLoss();
    bool              CheckClose();
 
   };
@@ -59,34 +59,85 @@ CPositionInfoXL::~CPositionInfoXL(void)
   {
   }
 //+------------------------------------------------------------------+
-   bool     CPositionInfoXL:: CheckTakeprofit() 
-   {
-     bool ret=false;
-     double price = PriceCurrent();   
-     double tp_price = PriceOpen() + Swap() + VTakeprofig()*Point();
-     int age = iTime(NULL,0,0) - Time();
-     if (age > PeriodSeconds(PERIOD_CURRENT))
+bool     CPositionInfoXL:: CheckTakeProfit()
+  {
+   bool ret=false;
+   
+   int tp = VTakeProfit();
+   if (tp==0) return false;
+   
+   double swp=Swap();
+   double price = PriceCurrent();
+   double tp_price = 0;
+   ENUM_POSITION_TYPE type=PositionType();
+   if(type == POSITION_TYPE_BUY)
      {
-        ret = price > tp_price;
+      tp_price =   PriceOpen() + swp +tp*Point() ;
      }
-     return(ret);
-   }
-   bool      CPositionInfoXL:: CheckStoploss()
-   {
-     bool ret= false;
-     double price = PriceCurrent();   
-     double sl_price = PriceOpen() + Swap() + VStoploss()*Point();
-     int age = iTime(NULL,0,0) - Time();
-     if (age > PeriodSeconds(PERIOD_CURRENT))
+   else
      {
-        ret = price < sl_price;
+      tp_price = PriceOpen() - swp -tp*Point() ;
      }
-     return(ret);
-   }
-   bool      CPositionInfoXL:: CheckClose()
+
+   datetime now = iTime(NULL,0,0);
+   datetime open = Time();
+   int age = now-open;
+   int diff = PeriodSeconds(PERIOD_CURRENT);
+ //  Print(__FUNCTION__,": age=",age, " diff=",diff," tp_price=",tp_price," price=",price," type=",type);
+   if(age > diff)
+     {
+      ret = price > tp_price;
+     }
+   return(ret);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool      CPositionInfoXL:: CheckStopLoss()
+  {
+   bool ret= false;
+   int sl = VStopLoss();
+   if (sl==0) return false;
+   double swp=Swap();
+   double price = PriceCurrent();
+   double sl_price =  0;
+   ENUM_POSITION_TYPE type=PositionType();
+   if(type == POSITION_TYPE_BUY)
+     {
+      sl_price =   PriceOpen() - swp -sl*Point() ;
+     }
+   else
+     {
+      sl_price = PriceOpen() + swp + sl*Point() ;
+     }
+
+   datetime now = iTime(NULL,0,0);
+   datetime open = Time();
+   int age = now-open;
+   int diff = PeriodSeconds(PERIOD_CURRENT);
+  //  Print(__FUNCTION__,": age=",age, " diff=",diff," sl_price=",sl_price," price=",price," type=",type);
+   if(age > diff)
+     {
+      ret = price < sl_price;
+     }
+   return(ret);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool      CPositionInfoXL:: CheckClose()
+  {
+   bool ret= false;
+   ret = CheckTakeProfit();
+   if(!ret)
    {
-     bool ret= false;
-     ret = CheckTakeprofit();
-     if (!ret) ret = CheckStoploss();
-         return(ret);
-   }   
+      ret = CheckStopLoss();
+      if (ret) Print(__FUNCTION__,": *****  closing order by VStop ",Ticket());
+   }
+   else
+   {
+     Print(__FUNCTION__,": *****  closing order by VTake ",Ticket());
+   }
+   return(ret);
+  }
+//+------------------------------------------------------------------+

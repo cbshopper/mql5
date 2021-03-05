@@ -45,37 +45,32 @@ input double             Signal_VTakeLevel      =50.0;        // VTake Profit le
 
 input int                Signal_Expiration     =4;           // Expiration of pending orders (in bars)
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-input int                Signal_AMA_PeriodMA   =10;          // Adaptive Moving Average(10,...) Period of averaging
-input int                Signal_AMA_PeriodFast =2;           // Adaptive Moving Average(10,...) Period of fast EMA
-input int                Signal_AMA_PeriodSlow =30;          // Adaptive Moving Average(10,...) Period of slow EMA
-int                Signal_AMA_Shift      =0;           // Adaptive Moving Average(10,...) Time shift
-ENUM_APPLIED_PRICE Signal_AMA_Applied    =PRICE_CLOSE; // Adaptive Moving Average(10,...) Prices series
-input double             Signal_AMA_Weight     =1.0;         // Adaptive Moving Average(10,...) Weight [0...1.0]
-
 input int                Signal_DEMA_PeriodMA  =12;          // Double Exponential Moving Average Period of averaging
-int                Signal_DEMA_Shift     =0;           // Double Exponential Moving Average Time shift
-ENUM_APPLIED_PRICE Signal_DEMA_Applied   =PRICE_CLOSE; // Double Exponential Moving Average Prices series
+ int                Signal_DEMA_Shift     =0;           // Double Exponential Moving Average Time shift
+ ENUM_APPLIED_PRICE Signal_DEMA_Applied   =PRICE_CLOSE; // Double Exponential Moving Average Prices series
 input double             Signal_DEMA_Weight    =1.0;         // Double Exponential Moving Average Weight [0...1.0]
 
 input int                Signal_TriX_PeriodTriX=14;          // Triple Exponential Average Period of calculation
-ENUM_APPLIED_PRICE Signal_TriX_Applied   =PRICE_CLOSE; // Triple Exponential Average Prices series
+ ENUM_APPLIED_PRICE Signal_TriX_Applied   =PRICE_CLOSE; // Triple Exponential Average Prices series
 input double             Signal_TriX_Weight    =1.0;         // Triple Exponential Average Weight [0...1.0]
 
+input int                Signal_AMA_PeriodMA   =10;          // Adaptive Moving Average(10,...) Period of averaging
+input int                Signal_AMA_PeriodFast =2;           // Adaptive Moving Average(10,...) Period of fast EMA
+input int                Signal_AMA_PeriodSlow =30;          // Adaptive Moving Average(10,...) Period of slow EMA
+ int                Signal_AMA_Shift      =0;           // Adaptive Moving Average(10,...) Time shift
+ ENUM_APPLIED_PRICE Signal_AMA_Applied    =PRICE_CLOSE; // Adaptive Moving Average(10,...) Prices series
+input double             Signal_AMA_Weight     =1.0;         // Adaptive Moving Average(10,...) Weight [0...1.0]
+
 input int                Signal_FraMA_PeriodMA =12;          // Fractal Adaptive Moving Average Period of averaging
-int                Signal_FraMA_Shift    =0;           // Fractal Adaptive Moving Average Time shift
-ENUM_APPLIED_PRICE Signal_FraMA_Applied  =PRICE_CLOSE; // Fractal Adaptive Moving Average Prices series
+ int                Signal_FraMA_Shift    =0;           // Fractal Adaptive Moving Average Time shift
+ ENUM_APPLIED_PRICE Signal_FraMA_Applied  =PRICE_CLOSE; // Fractal Adaptive Moving Average Prices series
 input double             Signal_FraMA_Weight   =1.0;         // Fractal Adaptive Moving Average Weight [0...1.0]
 
-#ifdef ALL
-
 input int                Signal_TEMA_PeriodMA  =12;          // Triple Exponential Moving Average Period of averaging
-int                Signal_TEMA_Shift     =0;           // Triple Exponential Moving Average Time shift
-ENUM_APPLIED_PRICE Signal_TEMA_Applied   =PRICE_CLOSE; // Triple Exponential Moving Average Prices series
+ int                Signal_TEMA_Shift     =0;           // Triple Exponential Moving Average Time shift
+ ENUM_APPLIED_PRICE Signal_TEMA_Applied   =PRICE_CLOSE; // Triple Exponential Moving Average Prices series
 input double             Signal_TEMA_Weight    =1.0;         // Triple Exponential Moving Average Weight [0...1.0]
-#endif
+
 //--- inputs for trailing
 /************
 input int                Trailing_MA_Period     =12;               // Period of MA
@@ -121,12 +116,12 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-#ifdef SIGNALXL
+ #ifdef SIGNALXL  
    signal.VStopLevel(Signal_VStopLevel);
    signal.VTakeLevel(Signal_VTakeLevel);
-#endif
-//--- Creating filter CSignalAMA
-   CSignalAMA *filter0=new CSignalAMA;
+ #endif  
+//--- Creating filter CSignalDEMA
+   CSignalDEMA *filter0=new CSignalDEMA;
    if(filter0==NULL)
      {
       //--- failed
@@ -136,27 +131,10 @@ int OnInit()
      }
    signal.AddFilter(filter0);
 //--- Set filter parameters
-   filter0.PeriodMA(Signal_AMA_PeriodMA);
-   filter0.PeriodFast(Signal_AMA_PeriodFast);
-   filter0.PeriodSlow(Signal_AMA_PeriodSlow);
-   filter0.Shift(Signal_AMA_Shift);
-   filter0.Applied(Signal_AMA_Applied);
-   filter0.Weight(Signal_AMA_Weight);
-//--- Creating filter CSignalDEMA
-   CSignalDEMA *filter2=new CSignalDEMA;
-   if(filter2==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating filter2");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-   signal.AddFilter(filter2);
-//--- Set filter parameters
-   filter2.PeriodMA(Signal_DEMA_PeriodMA);
-   filter2.Shift(Signal_DEMA_Shift);
-   filter2.Applied(Signal_DEMA_Applied);
-   filter2.Weight(Signal_DEMA_Weight);
+   filter0.PeriodMA(Signal_DEMA_PeriodMA);
+   filter0.Shift(Signal_DEMA_Shift);
+   filter0.Applied(Signal_DEMA_Applied);
+   filter0.Weight(Signal_DEMA_Weight);
 //--- Creating filter CSignalTriX
    CSignalTriX *filter1=new CSignalTriX;
    if(filter1==NULL)
@@ -171,6 +149,23 @@ int OnInit()
    filter1.PeriodTriX(Signal_TriX_PeriodTriX);
    filter1.Applied(Signal_TriX_Applied);
    filter1.Weight(Signal_TriX_Weight);
+//--- Creating filter CSignalAMA
+   CSignalAMA *filter2=new CSignalAMA;
+   if(filter2==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating filter2");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+   signal.AddFilter(filter2);
+//--- Set filter parameters
+   filter2.PeriodMA(Signal_AMA_PeriodMA);
+   filter2.PeriodFast(Signal_AMA_PeriodFast);
+   filter2.PeriodSlow(Signal_AMA_PeriodSlow);
+   filter2.Shift(Signal_AMA_Shift);
+   filter2.Applied(Signal_AMA_Applied);
+   filter2.Weight(Signal_AMA_Weight);
 //--- Creating filter CSignalFrAMA
    CSignalFrAMA *filter3=new CSignalFrAMA;
    if(filter3==NULL)
@@ -186,9 +181,6 @@ int OnInit()
    filter3.Shift(Signal_FraMA_Shift);
    filter3.Applied(Signal_FraMA_Applied);
    filter3.Weight(Signal_FraMA_Weight);
-#ifdef ALL
-   
-
 //--- Creating filter CSignalTEMA
    CSignalTEMA *filter4=new CSignalTEMA;
    if(filter4==NULL)
@@ -204,8 +196,7 @@ int OnInit()
    filter4.Shift(Signal_TEMA_Shift);
    filter4.Applied(Signal_TEMA_Applied);
    filter4.Weight(Signal_TEMA_Weight);
-#endif   
-//--- Creation of trailing object
+   //--- Creation of trailing object
    CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
      {
@@ -214,7 +205,6 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-
 //--- Add trailing to expert (will be deleted automatically))
    if(!ExtExpert.InitTrailing(trailing))
      {
@@ -224,31 +214,31 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Set trailing parameters
-   /****************
-   //--- Creation of trailing object
-      CTrailingMA *trailing=new CTrailingMA;
-      if(trailing==NULL)
-        {
-         //--- failed
-         printf(__FUNCTION__+": error creating trailing");
-         ExtExpert.Deinit();
-         return(INIT_FAILED);
-        }
-   //--- Add trailing to expert (will be deleted automatically))
-      if(!ExtExpert.InitTrailing(trailing))
-        {
-         //--- failed
-         printf(__FUNCTION__+": error initializing trailing");
-         ExtExpert.Deinit();
-         return(INIT_FAILED);
-        }
-
-   //--- Set trailing parameters
-      trailing.Period(Trailing_MA_Period);
-      trailing.Shift(Trailing_MA_Shift);
-      trailing.Method(Trailing_MA_Method);
-      trailing.Applied(Trailing_MA_Applied);
-    **************/
+/****************   
+//--- Creation of trailing object
+   CTrailingMA *trailing=new CTrailingMA;
+   if(trailing==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating trailing");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+//--- Add trailing to expert (will be deleted automatically))
+   if(!ExtExpert.InitTrailing(trailing))
+     {
+      //--- failed
+      printf(__FUNCTION__+": error initializing trailing");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+     
+//--- Set trailing parameters
+   trailing.Period(Trailing_MA_Period);
+   trailing.Shift(Trailing_MA_Shift);
+   trailing.Method(Trailing_MA_Method);
+   trailing.Applied(Trailing_MA_Applied);
+ **************/  
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

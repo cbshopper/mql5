@@ -37,6 +37,10 @@ protected:
    double            m_take_level;     // level of placing of the "take profit" order relatively to the open price
    int               m_expiration;     // time of expiration of a pending order in bars
    double            m_direction;      // weighted direction
+   
+   double            m_vstop_level;     // level of placing of the "virtual stop loss" order relatively to the open price
+   double            m_vtake_level;     // level of placing of the "virtual take profit" order relatively to the open price
+
 
 public:
                      CExpertSignal(void);
@@ -55,6 +59,12 @@ public:
    void              PriceLevel(double value)  { m_price_level=value;     }
    void              StopLevel(double value)   { m_stop_level=value;      }
    void              TakeLevel(double value)   { m_take_level=value;      }
+ #ifdef SIGNALXL  
+    void              VStopLevel(double value)   { m_vstop_level=value;    }
+    void              VTakeLevel(double value)   { m_vtake_level=value;      }  
+   int              VStopLevel(void)   { return m_vstop_level;      }
+   int              VTakeLevel(void)   { return m_vtake_level;      }  
+#endif
    void              Expiration(int value)     { m_expiration=value;      }
    //--- method of initialization of the object
    void              Magic(ulong value);

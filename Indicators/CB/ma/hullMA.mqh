@@ -17,10 +17,11 @@ Die Berechnung des Hull Moving Average erfolgt in 3 Schritten.
 #include <cb\CB_IndicatorHelper.mqh>
 #include <cb\CB_MAUtils.mqh>
 #include <MovingAverages.mqh>
+#include <Indicators\Indicator.mqh>
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-class CHull
+class CHull: public CIndicator
   {
 
 private :
@@ -47,6 +48,7 @@ public :
                      SqrtPeriod(0) {      m_period = 0; m_divisor = 2.0;              }
                     ~CHull()       { ArrayFree(priceArr); ArrayFree(workHull); }
 
+   double            Values[];
    bool              init(int period, double divisor, ENUM_APPLIED_PRICE price)
      {
       m_period = period;
@@ -55,7 +57,7 @@ public :
       HmaPeriod  = (int)fmax(m_period, 2);
       HalfPeriod = (int)floor(HmaPeriod / m_divisor);
       SqrtPeriod = (int)floor(sqrt(HmaPeriod));
-
+      ArraySetAsSeries(Values, true);
       ArraySetAsSeries(workHull, true);
       ArraySetAsSeries(priceArr, true);
       ArraySetAsSeries(rates,true);
@@ -97,6 +99,8 @@ public :
             priceArr[i] = _getPrice(m_price, rates[i]);
            }
          ret = getHull(0);
+         if (ArraySize(Values) < Bars) ArrayResize(Values,Bars);
+         Values[shift] = ret;
         }
       return ret;
      }

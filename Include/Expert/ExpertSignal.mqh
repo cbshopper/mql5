@@ -231,7 +231,7 @@ bool CExpertSignal::AddFilter(CExpertSignal *filter)
 bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-   Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
+  // Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
 //--- the "prohibition" signal
    if(m_direction==EMPTY_VALUE)
       return(false);
@@ -255,7 +255,7 @@ bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &
 bool CExpertSignal::CheckOpenShort(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-   Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
+  // Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
 //--- the "prohibition" signal
    if(m_direction==EMPTY_VALUE)
       return(false);
@@ -481,7 +481,7 @@ double CExpertSignal::Direction(void)
          result-=direction;
       else
          result+=direction;
-      Print(__FUNCTION__,": number=",number,": result=",result, " direction=",direction," trend_direction=",trend_direction);    
+    //  Print(__FUNCTION__,": number=",number,": result=",result, " direction=",direction," trend_direction=",trend_direction);    
       number++;
      
      }
@@ -491,13 +491,13 @@ double CExpertSignal::Direction(void)
    if(number!=0)
       result/=number;
 
-   Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
+ //  Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
    if(result > 0 && trend_direction<0)
       result=EMPTY_VALUE;
    if(result < 0 && trend_direction>0)
       result=EMPTY_VALUE;
 //      
-   Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
+ //  Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
 //--- return the result
    return(result);
   }

@@ -34,7 +34,8 @@ input double             Signal_TakeLevel      =50.0;        // Take Profit leve
 input int                Signal_Expiration     =4;           // Expiration of pending orders (in bars)
 
 input int                Signal_HullMA_PeriodMA=12;          // Hull Moving Average(12,2.0,...) Period of averaging
-input double             Signal_HullMA_Divisor =2.0;         // Hull Moving Average(12,2.0,...) Hull Divisor
+input int                Signal_HullMA_Shift          =0;           // Hull Moving Average(12,2,...) Shift
+input int                Signal_HullMA_Filter          =0;           // Hull Moving Average(12,2,...) Filter
 input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average(12,2.0,...) Prices series
 input double             Signal_HullMA_Weight  =1.0;         // Hull Moving Average(12,2.0,...) Weight [0...1.0]
 
@@ -96,7 +97,7 @@ int OnInit()
    signal.AddFilter(filter0);
 //--- Set filter parameters
    filter0.PeriodMA(Signal_HullMA_PeriodMA);
-   filter0.Divisor(Signal_HullMA_Divisor);
+   filter0.Shift(Signal_HullMA_Shift);
    filter0.Applied(Signal_HullMA_Applied);
    filter0.Weight(Signal_HullMA_Weight);
 //--- Creating filter CSignalHullMA
@@ -111,7 +112,8 @@ int OnInit()
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.PeriodMA(Signal_HullMA_PeriodMA);
-   filter1.Divisor(Signal_HullMA_Divisor);
+   filter1.Shift(Signal_HullMA_Shift);
+   filter1.Filter(Signal_HullMA_Filter);
    filter1.Applied(Signal_HullMA_Applied);
    filter1.Weight(Signal_HullMATurn_Weight);
 //--- Creation of trailing object

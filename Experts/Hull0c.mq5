@@ -14,7 +14,7 @@
 #include <Expert\Signal\SignalHullMA.mqh>
 #include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
-#include <Expert\Trailing\TrailingMA.mqh>
+#include <Expert\Trailing\TrailingHMA.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
@@ -23,7 +23,7 @@
 //--- inputs for expert
 input string             Expert_Title          ="Hull1";     // Document name
 ulong                    Expert_MagicNumber    =11609;       //
-bool                     Expert_EveryTick      =false;       //
+input bool                     Expert_EveryTick      =false;       //
 //--- inputs for main signal
 input int                Signal_ThresholdOpen  =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose =10;          // Signal threshold value to close [0...100]
@@ -32,18 +32,20 @@ input double             Signal_StopLevel      =50.0;        // Stop Loss level 
 input double             Signal_TakeLevel      =50.0;        // Take Profit level (in points)
 input int                Signal_Expiration     =4;           // Expiration of pending orders (in bars)
 input int                Signal_HullMA_PeriodMA=12;          // Hull Moving Average(12,2.0,...) Period of averaging
-input double             Signal_HullMA_Divisor =2.0;         // Hull Moving Average(12,2.0,...) Hull Divisor
+input int                Signal_HullMA_Shift          =0;           // Hull Moving Average(12,2,...) Shift
+input int                Signal_HullMA_Filter          =0;           // Hull Moving Average(12,2,...) Filter
 input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average(12,2.0,...) Prices series
 input double             Signal_HullMA_Weight  =1.0;         // Hull Moving Average(12,2.0,...) Weight [0...1.0]
 input int                Signal_STF_TrendPeriod=50;          // SignalTrendFilter(50,...) Trend Period
-input ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
+// ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
 input int                Signal_STF_TrendMiniff=0;           // SignalTrendFilter(50,...) Trend Period min.Diff
 input double             Signal_STF_Weight     =1.0;         // SignalTrendFilter(50,...) Weight [0...1.0]
 //--- inputs for trailing
-input int                Trailing_MA_Period    =12;          // Period of MA
-input int                Trailing_MA_Shift     =0;           // Shift of MA
-input ENUM_MA_METHOD     Trailing_MA_Method    =MODE_SMA;    // Method of averaging
-input ENUM_APPLIED_PRICE Trailing_MA_Applied   =PRICE_CLOSE; // Prices series
+input int                Trailing_MA_Period     =12;               // Period of Trailing HMA
+input int                Trailing_MA_Shift      =0;                // Shift of Trailing HMA
+input int                Trailing_MA_Filter     =0;         // Filter of Trailing HMA
+input ENUM_APPLIED_PRICE Trailing_MA_Applied    =PRICE_CLOSE;      // Prices series of Trailing HMA
+
 //--- inputs for money
 input double             Money_FixLot_Percent  =10.0;        // Percent
 input double             Money_FixLot_Lots     =0.1;         // Fixed volume
@@ -93,7 +95,8 @@ int OnInit()
    signal.AddFilter(filter0);
 //--- Set filter parameters
    filter0.PeriodMA(Signal_HullMA_PeriodMA);
-   filter0.Divisor(Signal_HullMA_Divisor);
+   filter0.Shift(Signal_HullMA_Shift);
+   filter0.Filter(Signal_HullMA_Filter);
    filter0.Applied(Signal_HullMA_Applied);
    filter0.Weight(Signal_HullMA_Weight);
 //--- Creating filter CSignalITF
@@ -108,11 +111,10 @@ int OnInit()
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.TrendPeriod(Signal_STF_TrendPeriod);
-   filter1.TrendMethod(Signal_STF_TrendMethod);
    filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
-   CTrailingMA *trailing=new CTrailingMA;
+   CTrailingHMA *trailing=new CTrailingHMA;
    if(trailing==NULL)
      {
       //--- failed
@@ -131,7 +133,7 @@ int OnInit()
 //--- Set trailing parameters
    trailing.Period(Trailing_MA_Period);
    trailing.Shift(Trailing_MA_Shift);
-   trailing.Method(Trailing_MA_Method);
+   trailing.Filter(Trailing_MA_Filter);
    trailing.Applied(Trailing_MA_Applied);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;

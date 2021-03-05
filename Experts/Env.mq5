@@ -25,7 +25,7 @@
 //--- inputs for expert
 input string             Expert_Title              ="Env";       // Document name
 ulong                    Expert_MagicNumber        =22061;       //
-//bool                     Expert_EveryTick          =false;       //
+input bool                     Expert_EveryTick          =false;       //
 //--- inputs for main signal
 input int                Signal_ThresholdOpen      =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose     =10;          // Signal threshold value to close [0...100]

@@ -4,23 +4,24 @@
 //|                                              http://www.mql5.com |
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include <Expert\ExpertSignal.mqh>
-#include "..\..\..\Indicators\CB\ma\hullMA.mqh"
+#include <CB\CBiHull.mqh>
 // wizard description start
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //| Description of the class                                         |
-//| Title=Signals of indicator 'Hull Moving Average'                 |
+//| Title=Signals of indicator 'Hull Moving Average Turn'            |
 //| Type=SignalAdvanced                                              |
-//| Name=Hull Moving Average                                         |
+//| Name=Hull Moving Average Turn                                    |
 //| ShortName=HullMA                                                 |
-//| Class=CSignalHullMA2                                              |
+//| Class=CSignalHullMA                                              |
 //| Page=signal_ma                                                   |
 //| Parameter=PeriodMA,int,12,Period of averaging                    |
-//| Parameter=Divisor, double,2.0, Hull Divisor                      |
+//| Parameter=Shift, int,0, Shift                                    |
 //| Parameter=Applied,ENUM_APPLIED_PRICE,PRICE_CLOSE,Prices series   |
+//| Parameter=Filter,int,0,Signal Filter                             |
 //+------------------------------------------------------------------+
 // wizard description end
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//| Class CSignalHullMA2.                                             |
+//| Class CSignalHullMA.                                             |
 //| Purpose: Class of generator of trade signals based on            |
 //|          the 'Hull Moving Average' indicator.                    |
 //| Is derived from the CExpertSignal class.                         |
@@ -28,13 +29,14 @@
 class CSignalHullMA2 : public CExpertSignal
   {
 protected:
-   CHull              m_ma;             // object+indicator
+   CiHull              m_ma;             // object+indicator
    //+++ adjusted parameters
    int               m_ma_period;      // the "period of averaging" parameter of the indicator
-   //  int               m_ma_shift;       // the "time shift" parameter of the indicator
+   int               m_ma_shift;       // the "time shift" parameter of the indicator
    //  ENUM_MA_METHOD    m_ma_method;      // the "method of averaging" parameter of the indicator
    double             m_ma_divisor;
    ENUM_APPLIED_PRICE m_ma_applied;    // the "object of averaging" parameter of the indicator
+   int               m_filter;    // the "object of averaging" parameter of the indicator
    //  double            m_ma_factor;
    //+++ "weights" of market models (0-100)
    int               m_pattern_0;      // model 0 "price is on the necessary side from the indicator"
@@ -48,7 +50,10 @@ public:
    //+++ methods of setting adjustable parameters
    void              PeriodMA(int value)                 { m_ma_period=value;          }
    void              Applied(ENUM_APPLIED_PRICE value)   { m_ma_applied=value;         }
-   void              Divisor(double value)               { m_ma_divisor=value;         }
+      void              Shift(int value) { m_ma_shift=value;         }
+   // void              Divisor(double value)               { m_ma_divisor=value;         }
+   void              Filter(int value) { m_filter=value;         }
+              
    //+++ methods of adjusting "weights" of market models
    void              Pattern_0(int value)                { m_pattern_0=value;          }
    void              Pattern_1(int value)                { m_pattern_1=value;          }
@@ -66,7 +71,7 @@ protected:
    //+++ method of initialization of the indicator
    bool              InitMA(CIndicators *indicators);
    //+++ methods of getting data
-   double            MA(int ind)                         { return(m_ma.calculate(ind));     }  
+   double            MA(int ind)                         { return(m_ma.Main(ind));     }  
    double            DiffMA(int ind)                     { return(MA(ind)-MA(ind+1));  }
    double            DiffOpenMA(int ind)                 { return(Open(ind)-MA(ind));  }
    double            DiffHighMA(int ind)                 { return(High(ind)-MA(ind));  }
@@ -94,7 +99,6 @@ CSignalHullMA2::CSignalHullMA2(void) : m_ma_period(12),
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 CSignalHullMA2::~CSignalHullMA2(void)
   {
-    m_ma.deinit();
   }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //| Validation settings protected data.                              |
@@ -139,7 +143,17 @@ bool CSignalHullMA2::InitMA(CIndicators *indicators)
    if(indicators==NULL)
       return(false);
 //+++ add object to collection
-   m_ma.init(m_ma_period,m_ma_divisor,m_ma_applied);
+   if(!indicators.Add(GetPointer(m_ma)))
+     {
+      printf(__FUNCTION__+": error adding object");
+      return(false);
+     }
+//--- initialize object
+   if(!m_ma.Create(m_symbol.Name(),m_period,m_ma_period,m_ma_shift,m_ma_applied,m_filter))
+     {
+      printf(__FUNCTION__+": error initializing object");
+      return(false);
+     }
 //+++ ok
    return(true);
   }

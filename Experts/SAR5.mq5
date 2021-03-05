@@ -35,9 +35,8 @@ input double         Signal_SAR_Step              =0.02;     // Parabolic SAR(0.
 input double         Signal_SAR_Maximum           =0.2;      // Parabolic SAR(0.02,0.2) Maximum rate
 input double         Signal_SAR_Weight            =1.0;      // Parabolic SAR(0.02,0.2) Weight [0...1.0]
 input int            Signal_STF_TrendPeriod       =50;       // SignalTrendFilter(50,...) Trend Period
-input ENUM_MA_METHOD Signal_STF_TrendMethod       =MODE_SMA; // SignalTrendFilter(50,...) Method of averaging
 input int            Signal_STF_TrendMiniff       =0;        // SignalTrendFilter(50,...) Trend Period min.Diff
-input double         Signal_STF_Weight            =1.0;      // SignalTrendFilter(50,...) Weight [0...1.0]
+ double         Signal_STF_Weight            =1.0;      // SignalTrendFilter(50,...) Weight [0...1.0]
 //--- inputs for trailing
 input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
 input double         Trailing_ParabolicSAR_Maximum=0.2;      // Maximum rate
@@ -104,8 +103,7 @@ int OnInit()
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.TrendPeriod(Signal_STF_TrendPeriod);
-   filter1.TrendMethod(Signal_STF_TrendMethod);
-   filter1.TrendMindiff(Signal_STF_TrendMiniff);
+  filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
    CTrailingPSAR *trailing=new CTrailingPSAR;

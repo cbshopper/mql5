@@ -32,7 +32,7 @@ input double             Signal_StopLevel             =50.0;        // Stop Loss
 input double             Signal_TakeLevel             =50.0;        // Take Profit level (in points)
 input int                Signal_Expiration            =4;           // Expiration of pending orders (in bars)
 input int                Signal_HullMA_PeriodMA       =12;          // Hull Moving Average(12,2,...) Period of averaging
-input double             Signal_HullMA_Divisor        =2;           // Hull Moving Average(12,2,...) Hull Divisor
+input int                Signal_HullMA_Shift          =0;           // Hull Moving Average(12,2,...) Shift
 input ENUM_APPLIED_PRICE Signal_HullMA_Applied        =PRICE_CLOSE; // Hull Moving Average(12,2,...) Prices series
 input double             Signal_HullMA_Weight         =1.0;         // Hull Moving Average(12,2,...) Weight [0...1.0]
 input int                Signal_MA_PeriodMA           =60;          // Moving Average(60,0,...) Period of averaging
@@ -94,7 +94,7 @@ int OnInit()
    
 //--- Set filter parameters
    filter0.PeriodMA(Signal_HullMA_PeriodMA);
-   filter0.Divisor(Signal_HullMA_Divisor);
+   filter0.Shift(Signal_HullMA_Shift);
    filter0.Applied(Signal_HullMA_Applied);
    filter0.Weight(Signal_HullMA_Weight);
 

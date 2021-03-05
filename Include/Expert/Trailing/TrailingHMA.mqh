@@ -4,7 +4,7 @@
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Expert\ExpertTrailing.mqh>
-#include "..\..\..\Indicators\CB\ma\hullMA.mqh"
+#include <CB\CBiHull.mqh>
 // wizard description start
 //+------------------------------------------------------------------+
 //| Description of the class                                         |
@@ -27,18 +27,22 @@
 class CTrailingHMA : public CExpertTrailing
   {
 protected:
-   CHull             *m_MA;
+   CiHull             *m_MA;
    //--- input parameters
    int               m_ma_period;
+   int               m_ma_shift;
    double               m_ma_divisor;
    ENUM_APPLIED_PRICE m_ma_applied;
+   double            m_filter;
 
 public:
                      CTrailingHMA(void);
                     ~CTrailingHMA(void);
    //--- methods of initialization of protected data
    void              Period(int period)                  { m_ma_period=period;   }
-   void              Divisor(double divisor)                    { m_ma_divisor=divisor;     }
+   void              Shift(int value)                  { m_ma_shift=value;   }
+   void              Filter(int value)                  { m_filter=value;   }
+  // void              Divisor(double divisor)                    { m_ma_divisor=divisor;     }
    void              Applied(ENUM_APPLIED_PRICE applied) { m_ma_applied=applied; }
    virtual bool      InitIndicators(CIndicators *indicators);
    virtual bool      ValidationSettings(void);
@@ -52,7 +56,9 @@ public:
 void CTrailingHMA::CTrailingHMA(void) : m_MA(NULL),
                                       m_ma_period(12),
                                       m_ma_divisor(2.0),
-                                      m_ma_applied(PRICE_CLOSE)
+                                      m_ma_applied(PRICE_CLOSE),
+                                      m_ma_shift(0),
+                                      m_filter(0)
   {
   }
 //+------------------------------------------------------------------+
@@ -87,12 +93,12 @@ bool CTrailingHMA::InitIndicators(CIndicators *indicators)
       return(false);
 //--- create MA indicator
    if(m_MA==NULL)
-      if((m_MA=new CHull)==NULL)
+      if((m_MA=new CiHull)==NULL)
         {
          printf(__FUNCTION__+": error creating object");
          return(false);
         }
-        /*
+       
 //--- add MA indicator to collection
    if(!indicators.Add(m_MA))
      {
@@ -100,9 +106,9 @@ bool CTrailingHMA::InitIndicators(CIndicators *indicators)
       delete m_MA;
       return(false);
      }
-     */
-//--- initialize MA indicator
-   if(! m_MA.init(m_ma_period,m_ma_divisor,m_ma_applied))
+     
+//--- initialize object
+   if(!m_MA.Create(m_symbol.Name(),m_period,m_ma_period,m_ma_shift,m_ma_applied,m_filter))
      {
       printf(__FUNCTION__+": error initializing object");
       return(false);
@@ -170,16 +176,16 @@ bool CTrailingHMA::CheckTrailingStopLong(CPositionInfo *position,double &sl,doub
 double win = position.Profit();
    double price =NormalizeDouble(m_symbol.Bid(),m_symbol.Digits());
    double level =NormalizeDouble(m_symbol.Bid()-m_symbol.StopsLevel()*m_symbol.Point(),m_symbol.Digits());
-   double new_sl=NormalizeDouble(m_MA.calculate(1),m_symbol.Digits());
+   double new_sl=NormalizeDouble(m_MA.Main(1),m_symbol.Digits());
    double pos_sl=position.StopLoss();
    double base  =(pos_sl==0.0) ? position.PriceOpen() : pos_sl;
 //---
    //if(new_sl>base && new_sl<level)
    //   sl=new_sl;
  //---     
-      double ma0 = m_MA.calculate(1);
-   double ma1 =m_MA.calculate(2);
-   double ma2 =m_MA.calculate(3);
+      double ma0 = m_MA.Main(1);
+   double ma1 =m_MA.Main(2);
+   double ma2 =m_MA.Main(3);
    bool turndn = ma2 < ma1 && ma0 < ma1;
    if (turndn) sl = level;
  
@@ -200,16 +206,16 @@ bool CTrailingHMA::CheckTrailingStopShort(CPositionInfo *position,double &sl,dou
    double win = position.Profit();
    double price =NormalizeDouble(m_symbol.Bid(),m_symbol.Digits());
    double level =NormalizeDouble(m_symbol.Ask()+m_symbol.StopsLevel()*m_symbol.Point(),m_symbol.Digits());
-   double new_sl=NormalizeDouble(m_MA.calculate(1)+m_symbol.Spread()*m_symbol.Point(),m_symbol.Digits());
+   double new_sl=NormalizeDouble(m_MA.Main(1)+m_symbol.Spread()*m_symbol.Point(),m_symbol.Digits());
    double pos_sl=position.StopLoss();
    double base  =(pos_sl==0.0) ? position.PriceOpen() : pos_sl;
 //---
   // if(new_sl<base && new_sl>level)
   //    sl=new_sl;
 //---
-   double ma0 = m_MA.calculate(1);
-   double ma1 =m_MA.calculate(2);
-   double ma2 =m_MA.calculate(3);
+   double ma0 = m_MA.Main(1);
+   double ma1 =m_MA.Main(2);
+   double ma2 =m_MA.Main(3);
    bool turnup = ma2 > ma1 && ma0 > ma1;
    if (turnup) sl = level;
    return(sl!=EMPTY_VALUE);

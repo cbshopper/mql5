@@ -14,7 +14,7 @@
 #include <Expert\Signal\SignalHullMA2.mqh>
 #include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
-#include <Expert\Trailing\TrailingNone.mqh>
+#include <Expert\Trailing\TrailingMA.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
@@ -23,7 +23,7 @@
 //--- inputs for expert
 input string             Expert_Title          ="Hull1";     // Document name
 ulong                    Expert_MagicNumber    =11609;       //
-bool                     Expert_EveryTick      =false;       //
+input bool                     Expert_EveryTick      =false;       //
 //--- inputs for main signal
 input int                Signal_ThresholdOpen  =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose =10;          // Signal threshold value to close [0...100]
@@ -36,9 +36,14 @@ input int                Signal_HullMA_Shift          =0;           // Hull Movi
 input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average(12,2.0,...) Prices series
 input double             Signal_HullMA_Weight  =1.0;         // Hull Moving Average(12,2.0,...) Weight [0...1.0]
 input int                Signal_STF_TrendPeriod=50;          // SignalTrendFilter(50,...) Trend Period
-//input ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
+ ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
 input int                Signal_STF_TrendMiniff=0;           // SignalTrendFilter(50,...) Trend Period min.Diff
 input double             Signal_STF_Weight     =1.0;         // SignalTrendFilter(50,...) Weight [0...1.0]
+//--- inputs for trailing
+input int                Trailing_MA_Period     =12;               // Period of MA
+input int                Trailing_MA_Shift      =0;                // Shift of MA
+input ENUM_MA_METHOD     Trailing_MA_Method     =MODE_SMA;         // Method of averaging
+input ENUM_APPLIED_PRICE Trailing_MA_Applied    =PRICE_CLOSE;      // Prices series
 
 //--- inputs for money
 input double             Money_FixLot_Percent  =10.0;        // Percent
@@ -104,11 +109,10 @@ int OnInit()
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.TrendPeriod(Signal_STF_TrendPeriod);
- //  filter1.TrendMethod(Signal_STF_TrendMethod);
    filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
-   CTrailingNone *trailing=new CTrailingNone;
+   CTrailingMA *trailing=new CTrailingMA;
    if(trailing==NULL)
      {
       //--- failed
@@ -124,6 +128,11 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
+//--- Set trailing parameters
+   trailing.Period(Trailing_MA_Period);
+   trailing.Shift(Trailing_MA_Shift);
+   trailing.Method(Trailing_MA_Method);
+   trailing.Applied(Trailing_MA_Applied);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

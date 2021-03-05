@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                        test1.mq5 |
+//|                                                        Hull1.mq5 |
 //|                        Copyright 2021, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -11,9 +11,8 @@
 //+------------------------------------------------------------------+
 #include <Expert\Expert.mqh>
 //--- available signals
-#include <Expert\Signal\SignalTRIX.mqh>
-#include <Expert\Signal\SignalTEMA.mqh>
-#include <Expert\Signal\SignalDEMA.mqh>
+#include <Expert\Signal\SignalHullMA.mqh>
+#include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
 #include <Expert\Trailing\TrailingNone.mqh>
 //--- available money management
@@ -22,9 +21,9 @@
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
 //--- inputs for expert
-input string             Expert_Title          ="test1";     // Document name
-ulong                    Expert_MagicNumber    =26185;       //
-bool                     Expert_EveryTick      =false;       //
+input string             Expert_Title          ="Hull1";     // Document name
+ulong                    Expert_MagicNumber    =11609;       //
+input bool                     Expert_EveryTick      =false;       //
 //--- inputs for main signal
 input int                Signal_ThresholdOpen  =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose =10;          // Signal threshold value to close [0...100]
@@ -32,17 +31,15 @@ input double             Signal_PriceLevel     =0.0;         // Price level to e
 input double             Signal_StopLevel      =50.0;        // Stop Loss level (in points)
 input double             Signal_TakeLevel      =50.0;        // Take Profit level (in points)
 input int                Signal_Expiration     =4;           // Expiration of pending orders (in bars)
-input int                Signal_TriX_PeriodTriX=14;          // Triple Exponential Average Period of calculation
-input ENUM_APPLIED_PRICE Signal_TriX_Applied   =PRICE_CLOSE; // Triple Exponential Average Prices series
-input double             Signal_TriX_Weight    =1.0;         // Triple Exponential Average Weight [0...1.0]
-input int                Signal_TEMA_PeriodMA  =12;          // Triple Exponential Moving Average Period of averaging
-input int                Signal_TEMA_Shift     =0;           // Triple Exponential Moving Average Time shift
-input ENUM_APPLIED_PRICE Signal_TEMA_Applied   =PRICE_CLOSE; // Triple Exponential Moving Average Prices series
-input double             Signal_TEMA_Weight    =1.0;         // Triple Exponential Moving Average Weight [0...1.0]
-input int                Signal_DEMA_PeriodMA  =12;          // Double Exponential Moving Average Period of averaging
-input int                Signal_DEMA_Shift     =0;           // Double Exponential Moving Average Time shift
-input ENUM_APPLIED_PRICE Signal_DEMA_Applied   =PRICE_CLOSE; // Double Exponential Moving Average Prices series
-input double             Signal_DEMA_Weight    =1.0;         // Double Exponential Moving Average Weight [0...1.0]
+input int                Signal_HullMA_PeriodMA=12;          // Hull Moving Average(12,2.0,...) Period of averaging
+input int                Signal_HullMA_Shift          =0;           // Hull Moving Average(12,2,...) Shift
+input ENUM_APPLIED_PRICE Signal_HullMA_Applied =PRICE_CLOSE; // Hull Moving Average(12,2.0,...) Prices series
+input double             Signal_HullMA_Weight  =1.0;         // Hull Moving Average(12,2.0,...) Weight [0...1.0]
+input int                Signal_STF_TrendPeriod=50;          // SignalTrendFilter(50,...) Trend Period
+ ENUM_MA_METHOD     Signal_STF_TrendMethod=MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
+input int                Signal_STF_TrendMiniff=0;           // SignalTrendFilter(50,...) Trend Period min.Diff
+input double             Signal_STF_Weight     =1.0;         // SignalTrendFilter(50,...) Weight [0...1.0]
+
 //--- inputs for money
 input double             Money_FixLot_Percent  =10.0;        // Percent
 input double             Money_FixLot_Lots     =0.1;         // Fixed volume
@@ -80,8 +77,8 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-//--- Creating filter CSignalTriX
-   CSignalTriX *filter0=new CSignalTriX;
+//--- Creating filter CSignalHullMA
+   CSignalHullMA *filter0=new CSignalHullMA;
    if(filter0==NULL)
      {
       //--- failed
@@ -91,11 +88,12 @@ int OnInit()
      }
    signal.AddFilter(filter0);
 //--- Set filter parameters
-   filter0.PeriodTriX(Signal_TriX_PeriodTriX);
-   filter0.Applied(Signal_TriX_Applied);
-   filter0.Weight(Signal_TriX_Weight);
-//--- Creating filter CSignalTEMA
-   CSignalTEMA *filter1=new CSignalTEMA;
+   filter0.PeriodMA(Signal_HullMA_PeriodMA);
+   filter0.Shift(Signal_HullMA_Shift);
+   filter0.Applied(Signal_HullMA_Applied);
+   filter0.Weight(Signal_HullMA_Weight);
+//--- Creating filter CSignalITF
+   CSignalTrend *filter1=new CSignalTrend;
    if(filter1==NULL)
      {
       //--- failed
@@ -105,25 +103,9 @@ int OnInit()
      }
    signal.AddFilter(filter1);
 //--- Set filter parameters
-   filter1.PeriodMA(Signal_TEMA_PeriodMA);
-   filter1.Shift(Signal_TEMA_Shift);
-   filter1.Applied(Signal_TEMA_Applied);
-   filter1.Weight(Signal_TEMA_Weight);
-//--- Creating filter CSignalDEMA
-   CSignalDEMA *filter2=new CSignalDEMA;
-   if(filter2==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating filter2");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-   signal.AddFilter(filter2);
-//--- Set filter parameters
-   filter2.PeriodMA(Signal_DEMA_PeriodMA);
-   filter2.Shift(Signal_DEMA_Shift);
-   filter2.Applied(Signal_DEMA_Applied);
-   filter2.Weight(Signal_DEMA_Weight);
+   filter1.TrendPeriod(Signal_STF_TrendPeriod);
+   filter1.TrendMindiff(Signal_STF_TrendMiniff);
+   filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
    CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
@@ -141,7 +123,6 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-//--- Set trailing parameters
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

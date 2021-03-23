@@ -17,6 +17,8 @@
 #include <Expert\Trailing\TrailingParabolicSAR.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
+
+#include <Expert\CB\ExpertSignalCB.mqh>
 //+------------------------------------------------------------------+
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
@@ -61,7 +63,7 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Creating signal
-   CExpertSignal *signal=new CExpertSignal;
+   CExpertSignalCB *signal=new CExpertSignalCB;
    if(signal==NULL)
      {
       //--- failed
@@ -103,7 +105,7 @@ int OnInit()
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.TrendPeriod(Signal_STF_TrendPeriod);
-  filter1.TrendMindiff(Signal_STF_TrendMiniff);
+   filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
    CTrailingPSAR *trailing=new CTrailingPSAR;

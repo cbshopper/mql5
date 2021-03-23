@@ -130,8 +130,7 @@ protected:
    //--- method of getting the measure units of price levels
    virtual double    PriceLevelUnit(void)      { return(m_adjusted_point); }
    //--- method of getting index of bar the analysis starts with
-  // virtual int       StartIndex(void) { return((m_every_tick?0:1)); }
-    virtual int       StartIndex(void) { return((0)); }
+   virtual int       StartIndex(void) { return((m_every_tick?0:1)); }
    virtual bool      CompareMagic(ulong magic) { return(m_magic==magic);   }
    bool              IsHedging(void) const { return(m_margin_mode==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING); }
   };

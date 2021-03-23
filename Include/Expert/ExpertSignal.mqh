@@ -9,9 +9,6 @@
 //+------------------------------------------------------------------+
 //--- check if a market model is used
 #define IS_PATTERN_USAGE(p)          ((m_patterns_usage&(((int)1)<<p))!=0)
-
-#define TREND_UP 1000
-#define TREND_DN -1000
 //+------------------------------------------------------------------+
 //| Class CExpertSignal.                                             |
 //| Purpose: Base class trading signals.                             |
@@ -37,10 +34,6 @@ protected:
    double            m_take_level;     // level of placing of the "take profit" order relatively to the open price
    int               m_expiration;     // time of expiration of a pending order in bars
    double            m_direction;      // weighted direction
-   
-   double            m_vstop_level;     // level of placing of the "virtual stop loss" order relatively to the open price
-   double            m_vtake_level;     // level of placing of the "virtual take profit" order relatively to the open price
-
 
 public:
                      CExpertSignal(void);
@@ -59,12 +52,6 @@ public:
    void              PriceLevel(double value)  { m_price_level=value;     }
    void              StopLevel(double value)   { m_stop_level=value;      }
    void              TakeLevel(double value)   { m_take_level=value;      }
- #ifdef SIGNALXL  
-    void              VStopLevel(double value)   { m_vstop_level=value;    }
-    void              VTakeLevel(double value)   { m_vtake_level=value;      }  
-   int              VStopLevel(void)   { return m_vstop_level;      }
-   int              VTakeLevel(void)   { return m_vtake_level;      }  
-#endif
    void              Expiration(int value)     { m_expiration=value;      }
    //--- method of initialization of the object
    void              Magic(ulong value);
@@ -97,24 +84,23 @@ public:
    virtual int       ShortCondition(void)                                     { return(0);     }
    virtual double    Direction(void);
    void              SetDirection(void)                             { m_direction=Direction(); }
-   double            GetDirection(void)                              {return m_direction;}
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
 CExpertSignal::CExpertSignal(void) : m_base_price(0.0),
-   m_general(-1),          // no "main" signal
-   m_weight(1.0),
-   m_patterns_usage(-1),   // all models are used
-   m_ignore(0),            // all additional filters are used
-   m_invert(0),
-   m_threshold_open(50),
-   m_threshold_close(100),
-   m_price_level(0.0),
-   m_stop_level(0.0),
-   m_take_level(0.0),
-   m_expiration(0),
-   m_direction(EMPTY_VALUE)
+                                     m_general(-1),          // no "main" signal
+                                     m_weight(1.0),
+                                     m_patterns_usage(-1),   // all models are used
+                                     m_ignore(0),            // all additional filters are used
+                                     m_invert(0),
+                                     m_threshold_open(50),
+                                     m_threshold_close(100),
+                                     m_price_level(0.0),
+                                     m_stop_level(0.0),
+                                     m_take_level(0.0),
+                                     m_expiration(0),
+                                     m_direction(EMPTY_VALUE)
   {
   }
 //+------------------------------------------------------------------+
@@ -133,7 +119,7 @@ int CExpertSignal::UsedSeries(void)
 //--- check of the flags of using timeseries in the additional filters
    int total=m_filters.Total();
 //--- loop by the additional filters
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       CExpertSignal *filter=m_filters.At(i);
       //--- check pointer
@@ -151,7 +137,7 @@ void CExpertSignal::Magic(ulong value)
   {
    int total=m_filters.Total();
 //--- loop by the additional filters
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       CExpertSignal *filter=m_filters.At(i);
       //--- check pointer
@@ -172,7 +158,7 @@ bool CExpertSignal::ValidationSettings(void)
 //--- check of parameters in the additional filters
    int total=m_filters.Total();
 //--- loop by the additional filters
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       CExpertSignal *filter=m_filters.At(i);
       //--- check pointer
@@ -196,7 +182,7 @@ bool CExpertSignal::InitIndicators(CIndicators *indicators)
    CExpertSignal *filter;
    int            total=m_filters.Total();
 //--- gather information about using of timeseries
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       filter=m_filters.At(i);
       m_used_series|=filter.UsedSeries();
@@ -205,7 +191,7 @@ bool CExpertSignal::InitIndicators(CIndicators *indicators)
    if(!CExpertBase::InitIndicators(indicators))
       return(false);
 //--- initialization of indicators and timeseries in the additional filters
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       filter=m_filters.At(i);
       filter.SetPriceSeries(m_open,m_high,m_low,m_close);
@@ -241,7 +227,6 @@ bool CExpertSignal::AddFilter(CExpertSignal *filter)
 bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-  // Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
 //--- the "prohibition" signal
    if(m_direction==EMPTY_VALUE)
       return(false);
@@ -265,7 +250,6 @@ bool CExpertSignal::CheckOpenLong(double &price,double &sl,double &tp,datetime &
 bool CExpertSignal::CheckOpenShort(double &price,double &sl,double &tp,datetime &expiration)
   {
    bool   result   =false;
-  // Print(__FUNCTION__, ": m_direction=",m_direction," m_threshold_open=",m_threshold_open," m_direction==EMPTY_VALUE",m_direction==EMPTY_VALUE);
 //--- the "prohibition" signal
    if(m_direction==EMPTY_VALUE)
       return(false);
@@ -444,19 +428,12 @@ double CExpertSignal::Direction(void)
   {
    long   mask;
    double direction;
-   int trend_direction=0;
-
-   int longCond= LongCondition();
-   int shortCond= ShortCondition();
-   double result =m_weight*(longCond-shortCond);
-    
-//   double result=m_weight*(LongCondition()-ShortCondition());
-  
+   double result=m_weight*(LongCondition()-ShortCondition());
    int    number=(result==0.0)? 0 : 1;      // number of "voted"
 //---
    int    total=m_filters.Total();
 //--- loop by filters
-   for(int i=0; i<total; i++)
+   for(int i=0;i<total;i++)
      {
       //--- mask for bit maps
       mask=((long)1)<<i;
@@ -467,47 +444,20 @@ double CExpertSignal::Direction(void)
       //--- check pointer
       if(filter==NULL)
          continue;
-      direction=filter.Direction();   // alle Filter in der Kette 
+      direction=filter.Direction();
       //--- the "prohibition" signal
       if(direction==EMPTY_VALUE)
          return(EMPTY_VALUE);
-      
-      //--- CB SignalTrend 
-      if (direction==TREND_UP)
-      {
-        trend_direction=1;
-        direction=0;
-        number--;
-      }
-      if (direction==TREND_DN)
-      {
-        trend_direction=-1;
-        direction=0;
-        number--;
-      }   
-      
       //--- check of flag of inverting the signal of filter
       if((m_invert&mask)!=0)
          result-=direction;
       else
          result+=direction;
-    //  Print(__FUNCTION__,": number=",number,": result=",result, " direction=",direction," trend_direction=",trend_direction);    
       number++;
-     
      }
-
-
 //--- normalization
    if(number!=0)
       result/=number;
-
- //  Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
-   if(result > 0 && trend_direction<0)
-      result=EMPTY_VALUE;
-   if(result < 0 && trend_direction>0)
-      result=EMPTY_VALUE;
-//      
- //  Print(__FUNCTION__,": result=",result," trend_direction=",trend_direction);   
 //--- return the result
    return(result);
   }

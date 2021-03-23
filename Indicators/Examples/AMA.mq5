@@ -76,7 +76,6 @@ void OnInit()
    PlotIndexSetString(0,PLOT_LABEL,short_name);
 //--- calculate ExtFastSC & ExtSlowSC
    ExtFastSC=2.0/(ExtFastPeriodEMA+1.0);
-    ExtSlowSC=2.0/(ExtSlowPeriodEMA+1.0);
   }
 //+------------------------------------------------------------------+
 //| AMA iteration function                                           |

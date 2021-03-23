@@ -5,6 +5,8 @@
 //+------------------------------------------------------------------+
 #include <Expert\ExpertSignal.mqh>
 #include <CB\CB_IndicatorHelper.mqh>
+#define TREND_UP 9999
+#define TREND_DN -9999
 // wizard description start
 //+------------------------------------------------------------------+
 //| Description of the class                                         |
@@ -55,7 +57,8 @@ CSignalTrend::CSignalTrend(void) : trend_period(50),
                                trend_ptr(INVALID_HANDLE)
   {
     
-    trend_ptr=iTriX(NULL,m_period,trend_period,PRICE_CLOSE);
+   // trend_ptr=iTriX(NULL,m_period,trend_period,PRICE_CLOSE);
+     trend_ptr=iMA(NULL,m_period,trend_period,0,MODE_EMA,PRICE_CLOSE);
   }
 //+------------------------------------------------------------------+
 //| Destructor                                                       |

@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                    SarTrader.mq5 |
+//|                                                        trend.mq5 |
 //|                        Copyright 2021, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -11,36 +11,36 @@
 //+------------------------------------------------------------------+
 #include <Expert\Expert.mqh>
 //--- available signals
-#include <Expert\Signal\SignalSAR.mqh>
+#include <Expert\Signal\SignalTRIX.mqh>
+#include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
-#include <Expert\Trailing\TrailingMA.mqh>
+#include <Expert\Trailing\TrailingNone.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
 //--- inputs for expert
-input string             Expert_Title         ="SarTrader"; // Document name
-ulong                    Expert_MagicNumber   =17098;       //
-bool                     Expert_EveryTick     =false;       //
+input string             Expert_Title           ="trend";     // Document name
+ulong                    Expert_MagicNumber     =14371;       //
+bool                     Expert_EveryTick       =false;       //
 //--- inputs for main signal
-input int                Signal_ThresholdOpen =10;          // Signal threshold value to open [0...100]
-input int                Signal_ThresholdClose=10;          // Signal threshold value to close [0...100]
-input double             Signal_PriceLevel    =0.0;         // Price level to execute a deal
-input double             Signal_StopLevel     =50.0;        // Stop Loss level (in points)
-input double             Signal_TakeLevel     =50.0;        // Take Profit level (in points)
-input int                Signal_Expiration    =4;           // Expiration of pending orders (in bars)
-input double             Signal_SAR_Step      =0.02;        // Parabolic SAR(0.02,0.2) Speed increment
-input double             Signal_SAR_Maximum   =0.2;         // Parabolic SAR(0.02,0.2) Maximum rate
-input double             Signal_SAR_Weight    =1.0;         // Parabolic SAR(0.02,0.2) Weight [0...1.0]
-//--- inputs for trailing
-input int                Trailing_MA_Period   =12;          // Period of MA
-input int                Trailing_MA_Shift    =0;           // Shift of MA
-input ENUM_MA_METHOD     Trailing_MA_Method   =MODE_SMA;    // Method of averaging
-input ENUM_APPLIED_PRICE Trailing_MA_Applied  =PRICE_CLOSE; // Prices series
+input int                Signal_ThresholdOpen   =10;          // Signal threshold value to open [0...100]
+input int                Signal_ThresholdClose  =10;          // Signal threshold value to close [0...100]
+input double             Signal_PriceLevel      =0.0;         // Price level to execute a deal
+input double             Signal_StopLevel       =50.0;        // Stop Loss level (in points)
+input double             Signal_TakeLevel       =50.0;        // Take Profit level (in points)
+input int                Signal_Expiration      =4;           // Expiration of pending orders (in bars)
+input int                Signal_TriX_PeriodTriX =14;          // Triple Exponential Average Period of calculation
+input ENUM_APPLIED_PRICE Signal_TriX_Applied    =PRICE_CLOSE; // Triple Exponential Average Prices series
+input double             Signal_TriX_Weight     =1.0;         // Triple Exponential Average Weight [0...1.0]
+input int                Signal_STF_TrendPeriod =50;          // SignalTrendFilter(50,...) Trend Period
+input ENUM_MA_METHOD     Signal_STF_TrendMethod =MODE_SMA;    // SignalTrendFilter(50,...) Method of averaging
+input int                Signal_STF_TrendMindiff=0;           // SignalTrendFilter(50,...) Trend Period min.Diff
+input double             Signal_STF_Weight      =1.0;         // SignalTrendFilter(50,...) Weight [0...1.0]
 //--- inputs for money
-input double             Money_FixLot_Percent =10.0;        // Percent
-input double             Money_FixLot_Lots    =0.1;         // Fixed volume
+input double             Money_FixLot_Percent   =10.0;        // Percent
+input double             Money_FixLot_Lots      =0.1;         // Fixed volume
 //+------------------------------------------------------------------+
 //| Global expert object                                             |
 //+------------------------------------------------------------------+
@@ -75,8 +75,8 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-//--- Creating filter CSignalSAR
-   CSignalSAR *filter0=new CSignalSAR;
+//--- Creating filter CSignalTriX
+   CSignalTriX *filter0=new CSignalTriX;
    if(filter0==NULL)
      {
       //--- failed
@@ -86,11 +86,25 @@ int OnInit()
      }
    signal.AddFilter(filter0);
 //--- Set filter parameters
-   filter0.Step(Signal_SAR_Step);
-   filter0.Maximum(Signal_SAR_Maximum);
-   filter0.Weight(Signal_SAR_Weight);
+   filter0.PeriodTriX(Signal_TriX_PeriodTriX);
+   filter0.Applied(Signal_TriX_Applied);
+   filter0.Weight(Signal_TriX_Weight);
+//--- Creating filter CSignalTrend
+   CSignalTrend *filter1=new CSignalTrend;
+   if(filter1==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating filter1");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+   signal.AddFilter(filter1);
+//--- Set filter parameters
+   filter1.TrendPeriod(Signal_STF_TrendPeriod);
+   filter1.TrendMindiff(Signal_STF_TrendMindiff);
+   filter1.Weight(Signal_STF_Weight);
 //--- Creation of trailing object
-   CTrailingMA *trailing=new CTrailingMA;
+   CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
      {
       //--- failed
@@ -107,10 +121,6 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Set trailing parameters
-   trailing.Period(Trailing_MA_Period);
-   trailing.Shift(Trailing_MA_Shift);
-   trailing.Method(Trailing_MA_Method);
-   trailing.Applied(Trailing_MA_Applied);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)
@@ -147,6 +157,9 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- ok
+
+// --- Debug
+//ExtExpert.OnTick();
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+

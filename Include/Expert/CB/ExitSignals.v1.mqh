@@ -30,8 +30,17 @@ input double             ExitSignal_MA_Weight      =1.0;         // EXIT Moving 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int ExitInit(CExpertCB *ThisExpert)
+int ExitInit(CExpertCB &Expert)
   {
+    CExpert ThisExpert;
+    if(!ThisExpert.Init(Symbol(),Period(),false,0))
+     {
+      //--- failed
+      printf(__FUNCTION__+": error initializing Exit expert");
+      ThisExpert.Deinit();
+      return(INIT_FAILED);
+     }
+   Expert.InitExitExpert(ThisExpert);  
 //--- Creating signal
    CExpertExitSignalCB *exitsignal=new CExpertExitSignalCB;
    if(exitsignal==NULL)
@@ -43,7 +52,7 @@ int ExitInit(CExpertCB *ThisExpert)
      }
 //---
    ThisExpert.InitExitSignal(exitsignal);
-   ThisExpert.InitSignal(exitsignal);
+
    exitsignal.ThresholdExit(ExitSignal_Threshold);
 
 //--- Creating filter CSignalSAR
@@ -75,14 +84,14 @@ int ExitInit(CExpertCB *ThisExpert)
    filter1.Weight(ExitSignal_MA_Weight);
 
 //--- Check all trading objects parameters
-   if(!ThisExpert.ValidationExitSettings())
+   if(!ThisExpert.ValidationSettings())
      {
       //--- failed
       ThisExpert.Deinit();
       return(INIT_FAILED);
      }
 //--- Tuning of all necessary indicators
-   if(!ThisExpert.InitExitIndicators())
+   if(!ThisExpert.InitIndicators())
      {
       //--- failed
       printf(__FUNCTION__+": error initializing indicators");

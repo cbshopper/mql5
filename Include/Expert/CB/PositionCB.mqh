@@ -57,7 +57,7 @@ bool CPositionInfoCB::checkTime(int delay)
    int diff = delay;  //PeriodSeconds(PERIOD_CURRENT);
 
    ret = age > diff;
-   Print(__FUNCTION__,": age=",age, " delay=",delay," diff=",diff," ret=",ret);
+  // Print(__FUNCTION__,": age=",age, " delay=",delay," diff=",diff," ret=",ret);
    return ret;
   }
 //+------------------------------------------------------------------+
@@ -100,7 +100,7 @@ bool CPositionInfoCB::checkPrice(bool take, double diff)
          ret = price > limit;
         }
      }
-  Print(__FUNCTION__,": take=",take," limit=",limit," price=",price," type=",type);
+  // Print(__FUNCTION__,": take=",take," limit=",limit," price=",price," type=",type);
    return ret;
   }
 //+------------------------------------------------------------------+
@@ -164,7 +164,7 @@ bool      CPositionInfoCB:: CheckStopLoss(int sl,int delay)
 bool      CPositionInfoCB:: CheckClose(int delay, int take, int stop)
   {
    bool ret= false;
-     Print(__FUNCTION__,": delay=", delay," take=",take, " stop=",stop," Ticket=",Ticket());
+  //   Print(__FUNCTION__,": delay=", delay," take=",take, " stop=",stop," Ticket=",Ticket());
    ret = CheckTakeProfit(take, delay);
    if(!ret)
      {

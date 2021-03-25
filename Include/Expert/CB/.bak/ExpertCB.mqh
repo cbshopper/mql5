@@ -19,11 +19,12 @@ protected:
    int               maxOrders;
    int               minBarDiff;
    bool              allowMultiOrder;
+   CExpertExitSignalCB *m_exit_signal;
 
    bool              CheckExitSignal();
    bool              CheckExitLong(void);
    bool              CheckExitShort(void);
-   void              GetExitSignal(void);
+
 
 public:
                      CExpertCB(void);
@@ -37,8 +38,9 @@ public:
    void              MinBarDiff(int value) {minBarDiff=value;}
    //--- processing (main method)
    virtual bool      Processing(void);
-   virtual  void      OnTick(void);
-
+   virtual bool      InitExitSignal(CExpertExitSignalCB *signal=NULL);
+   bool              InitExitIndicators(CIndicators *indicators=NULL);
+   bool              ValidationExitSettings();
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -71,8 +73,68 @@ bool CExpertCB::InitSignal(CExpertSignalCB *signal)
    return(true);
   }
 
+//+------------------------------------------------------------------+
+//| Initialization exit signal object                                     |
+//+------------------------------------------------------------------+
+bool CExpertCB::InitExitSignal(CExpertExitSignalCB *signal)
+  {
+   if(m_exit_signal!=NULL)
+      delete m_exit_signal;
+//---
+   m_exit_signal=signal;
+   if(m_exit_signal != NULL)
+     {
+      if(!m_exit_signal.Init(GetPointer(m_symbol),m_period,m_adjusted_point))
+         return(false);
+      m_exit_signal.EveryTick(m_every_tick);
+      m_exit_signal.Magic(m_magic);
+      m_init_phase=INIT_PHASE_TUNING; //!!!!!!!!!!!!!!
+      return(true);
+     }
+   return(false);
+  }
 
 
+//+------------------------------------------------------------------+
+//| Validation settings                                              |
+//+------------------------------------------------------------------+
+bool CExpertCB::ValidationExitSettings(void)
+  {
+   if(!CExpertBase::ValidationSettings())
+      return(false);
+//--- Check signal parameters
+   if(!m_exit_signal.ValidationSettings())
+     {
+      Print(__FUNCTION__+": error signal parameters");
+      return(false);
+     }
+//--- ok
+   return(true);
+  }
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool CExpertCB::InitExitIndicators(CIndicators *indicators)
+  {
+//--- NULL always comes as the parameter, but here it's not significant for us
+   CIndicators *indicators_ptr=GetPointer(m_indicators);
+//--- gather information about using of timeseries
+//  m_used_series|=exit_signal.UsedSeries();
+//--- create required timeseries
+   if(!CExpertBase::InitIndicators(indicators_ptr))
+      return(false);
+   m_exit_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
+   m_exit_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
+   if(!m_exit_signal.InitIndicators(indicators_ptr))
+     {
+      Print(__FUNCTION__+": error initialization indicators of signal object");
+      return(false);
+     }
+
+//--- ok
+   return(true);
+  }
 
 //+------------------------------------------------------------------+
 //| Check for position close or limit/stop order delete              |
@@ -108,23 +170,15 @@ bool CExpertCB::CheckClose(void)
    return(false);
   }
 //+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void CExpertCB::GetExitSignal()
-  {
-//  return false;
-   m_signal.SetExitDirection();
-   double d = m_signal.GetExitDirection();
-   if(d != 0)
-      Print(__FUNCTION__,": ExitDirection=",d);
-
- 
-  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 bool CExpertCB::CheckExitSignal()
   {
+   if(m_exit_signal == NULL)
+      return(false);
+   m_exit_signal.SetExitDirection();
+   Print(__FUNCTION__,": ExitDirection=",m_exit_signal.ExitDirection());
 
    if(m_position.PositionType()==POSITION_TYPE_BUY)
      {
@@ -145,7 +199,7 @@ bool CExpertCB::CheckExitSignal()
         }
      }
    return(false);
-  }  
+  }
 //+------------------------------------------------------------------+
 //| Check for long position close or limit/stop order delete         |
 //+------------------------------------------------------------------+
@@ -153,12 +207,8 @@ bool CExpertCB::CheckExitLong(void)
   {
    double price=EMPTY_VALUE;
 //--- check for long close operations
-   if(m_signal.CheckExitLong(price))
-     {
-      Print(__FUNCTION__,": CheckExitLong=true");
+   if(m_exit_signal.CheckExitLong(price))
       return(CloseLong(price));
-     }
-   Print(__FUNCTION__,": CheckExitLong=false");
 //--- return without operations
    return(false);
   }
@@ -169,12 +219,8 @@ bool CExpertCB::CheckExitShort(void)
   {
    double price=EMPTY_VALUE;
 //--- check for short close operations
-   if(m_signal.CheckExitShort(price))
-     {
-      Print(__FUNCTION__,": CheckExitShort=true");
+   if(m_exit_signal.CheckExitShort(price))
       return(CloseShort(price));
-     }
-   Print(__FUNCTION__,": CheckExitShort=false");
 //--- return without operations
    return(false);
   }
@@ -185,29 +231,25 @@ bool CExpertCB::CheckExitShort(void)
 bool CExpertCB::Processing(void)
   {
 
-//if(!allowMultiOrder)
-//  {
-//   return CExpert::Processing();
-//  }
+   if(!allowMultiOrder)
+     {
+      return CExpert::Processing();
+     }
    bool ret=false;
 //--- calculate signal direction once
    m_signal.SetDirection();
-   Print(__FUNCTION__,": Direction=",m_signal.GetDirection());
+   Print(__FUNCTION__,": Direction=",m_signal.Direction());
 //--- check if open positions
    int total=PositionsTotal();
-   Print(__FUNCTION__,": total Positions=",total);
    if(total!=0)
      {
-      GetExitSignal();
       for(int i=total-1; i>=0; i--)
         {
          if(m_position.SelectByIndex(i))
            {
             //-- check exit signal
             if(CheckExitSignal())
-               //     if (false)
               {
-               Print(__FUNCTION__,": CheckExitSignal=true");
                ret=true;
               }
             else
@@ -216,7 +258,6 @@ bool CExpertCB::Processing(void)
                //--- check the possibility of reverse the position
                if(CheckReverse())
                  {
-                  Print(__FUNCTION__,": CheckReverse=true");
                   ret=true;
                  }
                else
@@ -227,24 +268,28 @@ bool CExpertCB::Processing(void)
                      //--- check the possibility of modifying the position
                      if(CheckTrailingStop())
                        {
-                        Print(__FUNCTION__,": CheckTrailingStop=true");
                         ret = true;
                        }
                     }
-                  else
-                    { Print(__FUNCTION__,": CheckClose=true");}
                  }
               }
            }
         }
      }
-
-
-
+   total=PositionsTotal();
+   if(total!=0)
+     {
+      m_position.SelectByIndex(total - 1);
+      if(m_position.Time() >= iTime(NULL,0,minBarDiff))
+        {
+         return false;
+        }
+     }
+   if(total >= maxOrders)
+      return ret;
 
 //--- check if plased pending orders
    total=OrdersTotal();
-   Print(__FUNCTION__,": total Orders=",total);
    if(total!=0)
      {
       for(int i=total-1; i>=0; i--)
@@ -274,40 +319,10 @@ bool CExpertCB::Processing(void)
          return(false);
         }
      }
-   total=PositionsTotal();
-   if(total >= maxOrders)
-      return ret;
-
-   if(total!=0)
-     {
-      m_position.SelectByIndex(total - 1);
-      if(m_position.Time() >= iTime(NULL,0,minBarDiff))
-        {
-         return false;
-        }
-     }
-
 //--- check the possibility of opening a position/setting pending order
    if(CheckOpen())
       return(true);
 //--- return without operations
    return(false);
-  }
-//+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-//| OnTick handler                                                   |
-//+------------------------------------------------------------------+
-void CExpertCB::OnTick(void)
-  {
-
-// Processing(); return;
-//--- check process flag
-   if(!m_on_tick_process)
-      return;
-//--- updated quotes and indicators
-   if(!Refresh())
-      return;
-//--- expert processing
-   Processing();
   }
 //+------------------------------------------------------------------+

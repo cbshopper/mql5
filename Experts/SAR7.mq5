@@ -122,7 +122,7 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   signal.AddFilter(filter0);
+   signal.AddFilter(filter0,false);
 //--- Set filter parameters
    filter0.Step(Signal_SAR_Step);
    filter0.Maximum(Signal_SAR_Maximum);
@@ -156,12 +156,12 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   signal.AddFilter(filter2);
+   signal.AddFilter(filter2,true);
 //--- Set filter parameters
    filter2.Step(Exit_Signal_SAR_Step);
    filter2.Maximum(Exit_Signal_SAR_Maximum);
    filter2.Weight(0);
-   signal.SetAsExitSignal(filter2);
+  // signal.SetAsExitSignal(filter2);
  
  //  CExpertSignalCB exit_filter = filter2; 
    // exit_filter.ExitWeight(Exit_Signal_SAR_ExitWeight);

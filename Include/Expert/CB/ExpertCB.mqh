@@ -38,6 +38,7 @@ public:
    //--- processing (main method)
    virtual bool      Processing(void);
    virtual  void      OnTick(void);
+   virtual bool      InitIndicators(CIndicators *indicators=NULL);
 
   };
 //+------------------------------------------------------------------+
@@ -72,7 +73,42 @@ bool CExpertCB::InitSignal(CExpertSignalCB *signal)
   }
 
 
-
+bool CExpertCB::InitIndicators(CIndicators *indicators)
+  {
+    
+//--- NULL always comes as the parameter, but here it's not significant for us
+   CIndicators *indicators_ptr=GetPointer(m_indicators);
+//--- gather information about using of timeseries
+   m_used_series|=m_signal.UsedSeries();
+   m_used_series|=m_trailing.UsedSeries();
+   m_used_series|=m_money.UsedSeries();
+//--- create required timeseries
+   if(!CExpertBase::InitIndicators(indicators_ptr))
+      return(false);
+   m_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
+   m_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
+   if(!m_signal.InitIndicators(indicators_ptr))
+     {
+      Print(__FUNCTION__+": error initialization indicators of signal object");
+      return(false);
+     }
+   m_trailing.SetPriceSeries(m_open,m_high,m_low,m_close);
+   m_trailing.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
+   if(!m_trailing.InitIndicators(indicators_ptr))
+     {
+      Print(__FUNCTION__+": error initialization indicators of trailing object");
+      return(false);
+     }
+   m_money.SetPriceSeries(m_open,m_high,m_low,m_close);
+   m_money.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
+   if(!m_money.InitIndicators(indicators_ptr))
+     {
+      Print(__FUNCTION__+": error initialization indicators of money object");
+      return(false);
+     }
+//--- ok
+   return(true);
+  }
 
 //+------------------------------------------------------------------+
 //| Check for position close or limit/stop order delete              |

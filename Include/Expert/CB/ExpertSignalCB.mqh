@@ -16,56 +16,63 @@ class CExpertSignalCB : public CExpertSignal
   {
 
 protected:
+/*
    int               v_stoploss;
    int               v_takeprofit;
    bool              v_use;
    int               v_delay;
-   double            m_exit_direction;
-   double            m_exit_weight;         // "exit weight" of a signal in a combined filter
-   int               m_threshold_exit;
-   CArrayObj         exit_signals;        // array of additional filters (maximum number of fileter is 64)
-   bool              IsExitSignal(CExpertSignal *filter);
+   */
+   
+//   double            m_exit_direction;
+//   double            m_exit_weight;         // "exit weight" of a signal in a combined filter
+//   int               m_threshold_exit;
+//   CArrayObj         exit_signals;        // array of additional filters (maximum number of fileter is 64)
+//   bool              IsExitSignal(CExpertSignal *filter);
 
 
 public:
                      CExpertSignalCB(void);
                     ~CExpertSignalCB(void);
-   int               VStopLevel(void) {return v_stoploss;}
-   int               VTakeLevel(void) {return v_takeprofit;}
+                    
+         /*           
    bool              VUse(void) {return v_use;}
    int               VDelay(void) {return v_delay;}
-
-   void              VStopLevel(int value) { v_stoploss = value; }
-   void              VTakeLevel(int value) { v_takeprofit = value; }
+   double            VStopLevel(void) {return v_stoploss;}
+   double            VTakeLevel(void) {return v_takeprofit;}
+   void              StopLevel(int value) { v_stoploss = value; CExpertSignal::StopLevel(value); }
+   void              TakeLevel(int value) { v_takeprofit = value; CExpertSignal::TakeLevel(value); }
    void              VUse(int value) { v_use = value; if(v_use) {TakeLevel(0); StopLevel(0);}}
    void              VDelay(int value) {v_delay=value*60;}
-
-   double            Direction(bool asExit);
-   void              SetDirection(void)                             { m_direction=Direction(false); }
+*/
+   virtual double            Direction();
+   virtual void              SetDirection(void)                             { m_direction=Direction(); }
    double            GetDirection(void)         {return m_direction;}
-   double            ExitDirection(void);
-   void              SetExitDirection(void) {m_exit_direction = Direction(true);}
-   double              GetExitDirection(void) {return m_exit_direction;}
-   bool              CheckExitLong(double &price);
-   bool              CheckExitShort(double &price);
-   void              ExitWeight(double value)      { m_exit_weight=value;  Print(__FUNCTION__,": m_exit_weight=",m_exit_weight);        }
-   double            ExitWeight(void)      { return m_exit_weight;    }
-   void              ThresholdExit(int value) { m_threshold_exit=value; }
+//   double            ExitDirection(void);
+//   void              SetExitDirection(void) {m_exit_direction = Direction(true);}
+//   double              GetExitDirection(void) {return m_exit_direction;}
+//   bool              CheckExitLong(double &price);
+//   bool              CheckExitShort(double &price);
+//   void              ExitWeight(double value)      { m_exit_weight=value;  Print(__FUNCTION__,": m_exit_weight=",m_exit_weight);        }
+//   double            ExitWeight(void)      { return m_exit_weight;    }
+ //  void              ThresholdExit(int value) { m_threshold_exit=value; }
    // bool              SetAsExitSignal(CExpertSignalCB *signal);
    //bool              SetAsExitSignal(CExpertSignal *signal);
-      virtual bool      AddFilter(CExpertSignal *filter,bool asExit);
-    virtual bool      InitIndicators(CIndicators *indicators);
+  //    virtual bool      AddFilter(CExpertSignal *filter,bool asExit);
+  //  virtual bool      InitIndicators(CIndicators *indicators);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
-CExpertSignalCB::CExpertSignalCB(void) : v_stoploss(0),
+CExpertSignalCB::CExpertSignalCB(void) 
+/*: v_stoploss(0),
    v_takeprofit(0),
    v_use(false),
-   v_delay(0),
-   m_exit_direction(0),
-   m_exit_weight(0),
-   m_threshold_exit(0)
+   v_delay(0)
+   */
+ //  ,
+ //  m_exit_direction(0),
+ //  m_exit_weight(0),
+ //  m_threshold_exit(0)
   {
   }
 //+------------------------------------------------------------------+
@@ -74,6 +81,7 @@ CExpertSignalCB::CExpertSignalCB(void) : v_stoploss(0),
 CExpertSignalCB::~CExpertSignalCB(void)
   {
   }
+  /****************
 //+------------------------------------------------------------------+
 //| Setting an additional filter                                     |
 //+------------------------------------------------------------------+
@@ -140,10 +148,11 @@ bool CExpertSignalCB::InitIndicators(CIndicators *indicators)
 //--- succeed
    return(true);
   }
+*/  
 //+------------------------------------------------------------------+
 //| Detecting the "weighted" direction                               |
 //+------------------------------------------------------------------+
-double CExpertSignalCB::Direction(bool asExit)
+double CExpertSignalCB::Direction()
   {
    long   mask;
    double direction;
@@ -152,19 +161,13 @@ double CExpertSignalCB::Direction(bool asExit)
    int longCond= LongCondition();
    int shortCond= ShortCondition();
    double result = 0;
-   if (!asExit)
      result = m_weight*(longCond-shortCond);
-   else
-    result =m_exit_weight*(longCond-shortCond);
 //   double result=m_weight*(LongCondition()-ShortCondition());
 
    int    number=(result==0.0)? 0 : 1;      // number of "voted"
 //---
    int    total= 0;
-   if (!asExit)
      total= m_filters.Total();
-   else 
-     total = exit_signals.Total();
      
 // Print(__FUNCTION__,": number=",number,": result=",result, " total=",total);
 
@@ -178,10 +181,8 @@ double CExpertSignalCB::Direction(bool asExit)
          continue;
          
       CExpertSignal *filter=NULL;   
-      if (!asExit)   
-          filter=m_filters.At(i);
-      else
-        filter = exit_signals.At(i);    
+      filter=m_filters.At(i);
+
       //--- check pointer
      
       if(filter==NULL)
@@ -192,12 +193,9 @@ double CExpertSignalCB::Direction(bool asExit)
 
       direction=filter.Direction();   // alle Filter in der Kette
 
-
       //--- the "prohibition" signal
       if(direction==EMPTY_VALUE)
          return(EMPTY_VALUE);
-      if (!asExit)
-      {
       //--- CB SignalTrend
       if(direction==TREND_UP)
         {
@@ -212,8 +210,6 @@ double CExpertSignalCB::Direction(bool asExit)
          //        number--;
         }
         
-        
-        }
       if(direction != 0.0)
         {
          //--- check of flag of inverting the signal of filter
@@ -327,6 +323,8 @@ double CExpertSignalCB::ExitDirection(void)
    return(result);
   }
   */
+  
+  /*
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //| Generating a signal for closing of a long position               |
@@ -371,3 +369,4 @@ bool CExpertSignalCB::CheckExitShort(double &price)
    return(result);
   }
 //+------------------------------------------------------------------+
+*/

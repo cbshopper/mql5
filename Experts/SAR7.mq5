@@ -107,11 +107,17 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-   signal.VStopLevel(Signal_StopLevel);
-   signal.VTakeLevel(Signal_TakeLevel);
-   signal.VDelay(Signal_VDelayMinutes);
-   signal.VUse(Signal_VUse);
-   signal.ThresholdExit(Signal_ThresholdExit);
+   
+   ExtExpert.VStopLevel(Signal_StopLevel);
+   ExtExpert.VTakeLevel(Signal_TakeLevel);
+   ExtExpert.VDelay(Signal_VDelayMinutes);
+   ExtExpert.VUse(Signal_VUse);
+   
+   //signal.VStopLevel(Signal_StopLevel);
+   //signal.VTakeLevel(Signal_TakeLevel);
+  // signal.VDelay(Signal_VDelayMinutes);
+  // signal.VUse(Signal_VUse);
+  // signal.ThresholdExit(Signal_ThresholdExit);
 //--- Creating filter CSignalSAR
   //CSignalSARChange *filter0=new CSignalSARChange;
    CSignalSAR *filter0=new CSignalSAR;
@@ -122,7 +128,7 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   signal.AddFilter(filter0,false);
+   signal.AddFilter(filter0);
 //--- Set filter parameters
    filter0.Step(Signal_SAR_Step);
    filter0.Maximum(Signal_SAR_Maximum);
@@ -146,6 +152,22 @@ int OnInit()
 
 //=======================================================================================
 
+   CExpertSignalCB *exit_signal=new CExpertSignalCB;
+   if(exit_signal==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating signal");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+   ExtExpert.InitExitSignal(exit_signal);
+   exit_signal.ThresholdOpen(Signal_ThresholdOpen);
+   exit_signal.ThresholdClose(Signal_ThresholdClose);
+   exit_signal.PriceLevel(0);
+   exit_signal.StopLevel(0);
+   exit_signal.TakeLevel(0);
+   exit_signal.Expiration(0);
+ //  exit_signal.ThresholdExit(Signal_ThresholdExit);
 //--- Creating filter CSignalSAR FOR EXIT !!!!!
 //   CSignalSARChange *filter2=new CSignalSARChange;
     CSignalSAR *filter2=new CSignalSAR;
@@ -156,7 +178,7 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   signal.AddFilter(filter2,true);
+   exit_signal.AddFilter(filter2);
 //--- Set filter parameters
    filter2.Step(Exit_Signal_SAR_Step);
    filter2.Maximum(Exit_Signal_SAR_Maximum);

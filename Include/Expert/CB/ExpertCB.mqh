@@ -7,17 +7,17 @@
 
 #include <Expert\CB\ExpertSignalCB.mqh>
 #include <Expert\CB\PositionCB.mqh>
-
+//#define CExpertSignalCB CExpertSignal
 //+------------------------------------------------------------------+
 class CExpertCB : public CExpert
   {
 
 protected:
    CPositionInfoCB    m_position;                 // position info object
-   CExpertSignalCB   *m_signal;
+   // CExpertSignalCB   *m_signal;
+   // CExpertSignalCB   *exit_signal;
    CExpertSignalCB   *exit_signal;
-   //CExpertSignal   *exit_signal;
-   int               maxOrders;
+   int               maxPositions;
    int               minBarDiff;
    bool              allowMultiOrder;
 
@@ -51,9 +51,9 @@ public:
 
    bool              CheckClose(void);
    //  virtual bool      InitSignal(CExpertSignalCB *signal);
-   void              MaxOrders(int value) {maxOrders=value;}
+   void              MaxPositions(int value) {maxPositions=value;}
    void              MultiOrderMode(bool value) {allowMultiOrder=value;}
-   int               MaxOrders(void) {return allowMultiOrder;}
+   int               MaxOrders(void) {return maxPositions;}
    bool              MultiOrderMode(void) {return allowMultiOrder;}
    void              MinBarDiff(int value) {minBarDiff=value;}
    //--- processing (main method)
@@ -65,11 +65,13 @@ public:
    void              DeinitExitSignal();
    void              Deinit();
    bool              ValidationSettings();
+   void              Magic(ulong value);
+
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
-CExpertCB::CExpertCB(void): maxOrders(2), allowMultiOrder(false),minBarDiff(2)
+CExpertCB::CExpertCB(void): maxPositions(1), allowMultiOrder(false),minBarDiff(2)
   {
   }
 //+------------------------------------------------------------------+
@@ -126,7 +128,16 @@ bool CExpertCB::InitExitSignal(CExpertSignalCB *signal)
 //--- ok
    return(true);
   }
+//+------------------------------------------------------------------+
+//| Sets magic number for object and its dependent objects           |
+//+------------------------------------------------------------------+
+void CExpertCB::Magic(ulong value)
+  {
+   if(exit_signal!=NULL)
+      exit_signal.Magic(value);
 
+   CExpert::Magic(value);
+  }
 //+------------------------------------------------------------------+
 //| Deinitialization signal object                                   |
 //+------------------------------------------------------------------+
@@ -146,55 +157,26 @@ void CExpertCB::Deinit(void)
   {
    DeinitExitSignal();
    CExpert::Deinit();
-   /*
-   //--- delete trade class
-   DeinitTrade();
-   //--- delete signal class
-   DeinitSignal();
-   //--- delete trailing class
-   DeinitTrailing();
-   //--- delete money class
-   DeinitMoney();
-   //--- delete indicators collection
-   DeinitIndicators();
-   */
+
   }
 //+------------------------------------------------------------------+
 //| Validation settings                                              |
 //+------------------------------------------------------------------+
 bool CExpertCB::ValidationSettings(void)
   {
-   /*
-    if(!CExpertBase::ValidationSettings())
-       return(false);
-   //--- Check signal parameters
-    if(!m_signal.ValidationSettings())
-      {
-       Print(__FUNCTION__+": error signal parameters");
-       return(false);
-      }
-   //--- Check trailing parameters
-    if(!m_trailing.ValidationSettings())
-      {
-       Print(__FUNCTION__+": error trailing parameters");
-       return(false);
-      }
-   //--- Check money parameters
-    if(!m_money.ValidationSettings())
-      {
-       Print(__FUNCTION__+": error money parameters");
-       return(false);
-      }
-      */
+
    if(!CExpert::ValidationSettings())
      {
       return false;
      }
 
-   if(!exit_signal.ValidationSettings())
+   if(exit_signal!=NULL)
      {
-      Print(__FUNCTION__+": error exit signal parameters");
-      return(false);
+      if(!exit_signal.ValidationSettings())
+        {
+         Print(__FUNCTION__+": error exit signal parameters");
+         return(false);
+        }
      }
 //--- ok
    return(true);
@@ -209,78 +191,25 @@ bool CExpertCB::InitIndicators(CIndicators *indicators)
      {
       return false;
      }
-
-
-   CIndicators *indicators_ptr=GetPointer(m_indicators);
-   m_used_series|=exit_signal.UsedSeries();
-   exit_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
-   exit_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
-
-   if(!exit_signal.InitIndicators(indicators_ptr))
+   if(exit_signal!=NULL)
      {
-      Print(__FUNCTION__+": error initialization indicators of exit signal object");
-      return(false);
+      CIndicators *indicators_ptr=GetPointer(m_indicators);
+      m_used_series|=exit_signal.UsedSeries();
+      exit_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
+      exit_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
+
+      if(!exit_signal.InitIndicators(indicators_ptr))
+        {
+         Print(__FUNCTION__+": error initialization indicators of exit signal object");
+         return(false);
+        }
      }
 //--- ok
    return(true);
 
   }
 
-/*
-bool CExpertCB::InitIndicators(CIndicators *indicators)
-  {
-//--- NULL always comes as the parameter, but here it's not significant for us
-   CIndicators *indicators_ptr=GetPointer(m_indicators);
-//--- gather information about using of timeseries
-   m_used_series|=m_signal.UsedSeries();
-   m_used_series|=m_trailing.UsedSeries();
-   m_used_series|=m_money.UsedSeries();
-    m_used_series|=exit_signal.UsedSeries();
-//--- create required timeseries
-   if(!CExpertBase::InitIndicators(indicators_ptr))
-      return(false);
-   m_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
-   m_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
 
-
-
-   if(!m_signal.InitIndicators(indicators_ptr))
-     {
-      Print(__FUNCTION__+": error initialization indicators of signal object");
-      return(false);
-     }
-
-     //XXXXXXXXXXXXXXXXXX
-
-       exit_signal.SetPriceSeries(m_open,m_high,m_low,m_close);
-   exit_signal.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
-
-   if(!exit_signal.InitIndicators(indicators_ptr))
-     {
-      Print(__FUNCTION__+": error initialization indicators of exit signal object");
-      return(false);
-     }
-
-
-   m_trailing.SetPriceSeries(m_open,m_high,m_low,m_close);
-   m_trailing.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
-   if(!m_trailing.InitIndicators(indicators_ptr))
-     {
-      Print(__FUNCTION__+": error initialization indicators of trailing object");
-      return(false);
-     }
-   m_money.SetPriceSeries(m_open,m_high,m_low,m_close);
-   m_money.SetOtherSeries(m_spread,m_time,m_tick_volume,m_real_volume);
-   if(!m_money.InitIndicators(indicators_ptr))
-     {
-      Print(__FUNCTION__+": error initialization indicators of money object");
-      return(false);
-     }
-   //XXXXXXXXXXXX
-//--- ok
-   return(true);
-  }
-*/
 //+------------------------------------------------------------------+
 //| Check for position close or limit/stop order delete              |
 //+------------------------------------------------------------------+
@@ -320,11 +249,16 @@ bool CExpertCB::CheckClose(void)
 void CExpertCB::GetExitSignal()
   {
 //  return false;
-   exit_signal.SetDirection();
-   double d = exit_signal.Direction();
-   if(d != 0)
+//Print(__FUNCTION__);
+   if(exit_signal != NULL)
+     {
+      exit_signal.SetDirection();
+      double d = exit_signal.Direction();
+      //  d=m_signal.Direction();
+      // exit_signal.setDir(d);
+      //  if(d != 0)
       Print(__FUNCTION__,": ExitDirection=",d);
-
+     }
 
   }
 //+------------------------------------------------------------------+
@@ -332,7 +266,6 @@ void CExpertCB::GetExitSignal()
 //+------------------------------------------------------------------+
 bool CExpertCB::CheckExitSignal()
   {
-
    if(m_position.PositionType()==POSITION_TYPE_BUY)
      {
       //--- check the possibility of closing the long position / delete pending orders to buy
@@ -345,7 +278,7 @@ bool CExpertCB::CheckExitSignal()
    else
      {
       //--- check the possibility of closing the short position / delete pending orders to sell
-      if(CheckCloseShort())
+      if(CheckExitShort())
         {
          DeleteOrdersShort();
          return(true);
@@ -358,6 +291,8 @@ bool CExpertCB::CheckExitSignal()
 //+------------------------------------------------------------------+
 bool CExpertCB::CheckExitLong(void)
   {
+  if(exit_signal==NULL)
+     return false;
    double price=EMPTY_VALUE;
 //--- check for long close operations
    if(exit_signal.CheckCloseLong(price))
@@ -374,6 +309,8 @@ bool CExpertCB::CheckExitLong(void)
 //+------------------------------------------------------------------+
 bool CExpertCB::CheckExitShort(void)
   {
+    if(exit_signal==NULL)
+     return false;
    double price=EMPTY_VALUE;
 //--- check for short close operations
    if(exit_signal.CheckCloseShort(price))
@@ -446,9 +383,6 @@ bool CExpertCB::Processing(void)
         }
      }
 
-
-
-
 //--- check if plased pending orders
    total=OrdersTotal();
    Print(__FUNCTION__,": total Orders=",total);
@@ -482,10 +416,12 @@ bool CExpertCB::Processing(void)
         }
      }
    total=PositionsTotal();
-   if(total >= maxOrders)
+   if(!allowMultiOrder)
+      maxPositions=1;
+   if((total >= maxPositions))
       return ret;
 
-   if(total!=0)
+   if(total>0)
      {
       m_position.SelectByIndex(total - 1);
       if(m_position.Time() >= iTime(NULL,0,minBarDiff))
@@ -517,4 +453,5 @@ void CExpertCB::OnTick(void)
 //--- expert processing
    Processing();
   }
+
 //+------------------------------------------------------------------+

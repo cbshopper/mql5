@@ -5,8 +5,9 @@
 //+------------------------------------------------------------------+
 #include <Expert\ExpertSignal.mqh>
 #include <CB\CB_IndicatorHelper.mqh>
-#define TREND_UP 9999
-#define TREND_DN -9999
+#define SELL_FORBIDDEN 9999
+#define BUY_FORBIDDEN -9999
+
 // wizard description start
 //+------------------------------------------------------------------+
 //| Description of the class                                         |
@@ -78,8 +79,9 @@ double CSignalTrend::Direction(void)
    double m0 = GetIndicatorValue(trend_ptr,idx);
    double m1 = GetIndicatorValue(trend_ptr,idx+1);
    
-   if (m0 > m1) return (TREND_UP); 
-   if (m0 < m1  ) return (TREND_DN) ;
+   Print(__FUNCTION__);
+   if (m0 > m1) return (SELL_FORBIDDEN); 
+   if (m0 < m1  ) return (BUY_FORBIDDEN) ;
 //--- condition OK
    return(0.0);
   }

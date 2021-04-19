@@ -33,7 +33,6 @@ bool                 Expert_EveryTick             =false;    //
 //--- inputs for main signal
 input int            Signal_ThresholdOpen         =10;       // Signal threshold value to open [0...100]
 input int            Signal_ThresholdClose        =10;       // Signal threshold value to close [0...100
-input int            Signal_ThresholdExit        =10;       // Signal threshold value to exit [0...100]
 input double         Signal_PriceLevel            =0.0;      // Price level to execute a deal
 input double         Signal_StopLevel             =50.0;     // Stop Loss level (in points)
 input double         Signal_TakeLevel             =50.0;     // Take Profit level (in points)
@@ -53,7 +52,7 @@ input int            Signal_STF_TrendMiniff       =0;        // SignalTrendFilte
  
 input double         Exit_Signal_SAR_Step              =0.01;     //EXIT Parabolic SAR(0.02,0.2) Speed increment
 input double         Exit_Signal_SAR_Maximum           =0.1;      //EXIT Parabolic SAR(0.02,0.2) Maximum rate
-input double         Exit_Signal_SAR_ExitWeight        =1.0;      //EXIT Parabolic SAR(0.02,0.2) EXITWeight [0...1.0]
+input double         Exit_Signal_SAR_Weight        =1.0;      //EXIT Parabolic SAR(0.02,0.2) EXITWeight [0...1.0]
 //
 //input int                Exit_Signal_MA_PeriodMA    =12;          // EXIT Moving Average(12,0,...) Period of averaging
 //input int                Exit_Signal_MA_Shift       =0;           // EXIT Moving Average(12,0,...) Time shift
@@ -102,7 +101,7 @@ int OnInit()
 //---
    ExtExpert.InitSignal(signal);
    signal.ThresholdOpen(Signal_ThresholdOpen);
-   signal.ThresholdClose(Signal_ThresholdClose);
+   signal.ThresholdClose(1000);
    signal.PriceLevel(Signal_PriceLevel);
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
@@ -113,11 +112,6 @@ int OnInit()
    ExtExpert.VDelay(Signal_VDelayMinutes);
    ExtExpert.VUse(Signal_VUse);
    
-   //signal.VStopLevel(Signal_StopLevel);
-   //signal.VTakeLevel(Signal_TakeLevel);
-  // signal.VDelay(Signal_VDelayMinutes);
-  // signal.VUse(Signal_VUse);
-  // signal.ThresholdExit(Signal_ThresholdExit);
 //--- Creating filter CSignalSAR
   //CSignalSARChange *filter0=new CSignalSARChange;
    CSignalSAR *filter0=new CSignalSAR;
@@ -133,7 +127,6 @@ int OnInit()
    filter0.Step(Signal_SAR_Step);
    filter0.Maximum(Signal_SAR_Maximum);
    filter0.Weight(Signal_SAR_Weight);
-   /*
 //--- Creating filter CSignalITF
    CSignalTrend *filter1=new CSignalTrend;
    if(filter1==NULL)
@@ -148,7 +141,6 @@ int OnInit()
    filter1.TrendPeriod(Signal_STF_TrendPeriod);
   filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
-*/
 
 //=======================================================================================
 
@@ -161,13 +153,12 @@ int OnInit()
       return(INIT_FAILED);
      }
    ExtExpert.InitExitSignal(exit_signal);
-   exit_signal.ThresholdOpen(Signal_ThresholdOpen);
+   exit_signal.ThresholdOpen(1000);
    exit_signal.ThresholdClose(Signal_ThresholdClose);
    exit_signal.PriceLevel(0);
    exit_signal.StopLevel(0);
    exit_signal.TakeLevel(0);
    exit_signal.Expiration(0);
- //  exit_signal.ThresholdExit(Signal_ThresholdExit);
 //--- Creating filter CSignalSAR FOR EXIT !!!!!
 //   CSignalSARChange *filter2=new CSignalSARChange;
     CSignalSAR *filter2=new CSignalSAR;
@@ -182,35 +173,8 @@ int OnInit()
 //--- Set filter parameters
    filter2.Step(Exit_Signal_SAR_Step);
    filter2.Maximum(Exit_Signal_SAR_Maximum);
-   filter2.Weight(0);
-  // signal.SetAsExitSignal(filter2);
- 
- //  CExpertSignalCB exit_filter = filter2; 
-   // exit_filter.ExitWeight(Exit_Signal_SAR_ExitWeight);
-  // signal.SetAsExitSignal(GetPointer(exit_filter));
- 
-  /*  
-// -- Creating filter MA-Signal
-   CSignalMA *filter3=new CSignalMA;
-   if(filter1==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating filter3");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-   signal.AddFilter(filter3);
-//--- Set filter parameters
-   filter3.PeriodMA(Exit_Signal_MA_PeriodMA);
-   filter3.Shift(Exit_Signal_MA_Shift);
-   filter3.Method(Exit_Signal_MA_Method);
-   filter3.Applied(Exit_Signal_MA_Applied);
-   filter3.Weight(0);
-  
-   exit_filter = filter3; 
-   exit_filter.ExitWeight(Exit_Signal_MA_ExitWeight);
-   signal.SetAsExitSignal(GetPointer(exit_filter));
-*/
+   filter2.Weight(Exit_Signal_SAR_Weight);
+
 //=======================================================================================
 /*
 //--- Creation of trailing object

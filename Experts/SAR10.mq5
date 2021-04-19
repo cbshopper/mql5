@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                                         SAR5.mq5 |
+//|                                                        SAR10.mq5 |
 //|                        Copyright 2021, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
@@ -9,49 +9,40 @@
 //+------------------------------------------------------------------+
 //| Include                                                          |
 //+------------------------------------------------------------------+
-#include <Expert\CB\ExpertCB.mqh>
+#include <Expert\Expert.mqh>
 //--- available signals
 #include <Expert\Signal\SignalSAR.mqh>
-
-#include <Expert\Signal\SignalSARChange.mqh>
-#include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
-#include <Expert\Trailing\TrailingParabolicSAR.mqh>
+#include <Expert\Trailing\TrailingNone.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
 //--- inputs for expert
-input string         Expert_Title                 ="SAR6";   // Document name
-ulong                Expert_MagicNumber           =13930;    //
-bool                 Expert_EveryTick             =false;    //
+input string Expert_Title         ="SAR10"; // Document name
+ulong        Expert_MagicNumber   =14727;   //
+bool         Expert_EveryTick     =false;   //
 //--- inputs for main signal
-input int            Signal_ThresholdOpen         =10;       // Signal threshold value to open [0...100]
-input int            Signal_ThresholdClose        =10;       // Signal threshold value to close [0...100]
-input double         Signal_PriceLevel            =0.0;      // Price level to execute a deal
-input double         Signal_StopLevel             =50.0;     // Stop Loss level (in points)
-input double         Signal_TakeLevel             =50.0;     // Take Profit level (in points)
-input int            Signal_Expiration            =4;        // Expiration of pending orders (in bars)
-input int                Signal_VDelayMinutes   =0;
-input bool               Signal_VUse            = false;      // use VTAKE/VSTOP instead fo Take/Stop
-
-input double         Signal_SAR_Step              =0.02;     // Parabolic SAR(0.02,0.2) Speed increment
-input double         Signal_SAR_Maximum           =0.2;      // Parabolic SAR(0.02,0.2) Maximum rate
-input double         Signal_SAR_Weight            =1.0;      // Parabolic SAR(0.02,0.2) Weight [0...1.0]
-input int            Signal_STF_TrendPeriod       =50;       // SignalTrendFilter(50,...) Trend Period
-input int            Signal_STF_TrendMiniff       =0;        // SignalTrendFilter(50,...) Trend Period min.Diff
-double         Signal_STF_Weight            =1.0;      // SignalTrendFilter(50,...) Weight [0...1.0]
-//--- inputs for trailing
-input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
-input double         Trailing_ParabolicSAR_Maximum=0.2;      // Maximum rate
+input int    Signal_ThresholdOpen =10;      // Signal threshold value to open [0...100]
+input int    Signal_ThresholdClose=10;      // Signal threshold value to close [0...100]
+input double Signal_PriceLevel    =0.0;     // Price level to execute a deal
+input double Signal_StopLevel     =50.0;    // Stop Loss level (in points)
+input double Signal_TakeLevel     =50.0;    // Take Profit level (in points)
+input int    Signal_Expiration    =4;       // Expiration of pending orders (in bars)
+input double Signal_0_SAR_Step    =0.02;    // Parabolic SAR(0.02,0.2) Speed increment
+input double Signal_0_SAR_Maximum =0.2;     // Parabolic SAR(0.02,0.2) Maximum rate
+input double Signal_0_SAR_Weight  =1.0;     // Parabolic SAR(0.02,0.2) Weight [0...1.0]
+input double Signal_1_SAR_Step    =0.01;    // Parabolic SAR(0.01,0.1) Speed increment
+input double Signal_1_SAR_Maximum =0.1;     // Parabolic SAR(0.01,0.1) Maximum rate
+input double Signal_1_SAR_Weight  =1.0;     // Parabolic SAR(0.01,0.1) Weight [0...1.0]
 //--- inputs for money
-input double         Money_FixLot_Percent         =10.0;     // Percent
-input double         Money_FixLot_Lots            =0.1;      // Fixed volume
+input double Money_FixLot_Percent =10.0;    // Percent
+input double Money_FixLot_Lots    =0.1;     // Fixed volume
 //+------------------------------------------------------------------+
 //| Global expert object                                             |
 //+------------------------------------------------------------------+
-CExpertCB ExtExpert;
+CExpert ExtExpert;
 //+------------------------------------------------------------------+
 //| Initialization function of the expert                            |
 //+------------------------------------------------------------------+
@@ -66,7 +57,7 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Creating signal
-   CExpertSignalCB *signal=new CExpertSignalCB;
+   CExpertSignal *signal=new CExpertSignal;
    if(signal==NULL)
      {
       //--- failed
@@ -82,13 +73,8 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-   ExtExpert.VStopLevel(Signal_StopLevel);
-   ExtExpert.VTakeLevel(Signal_TakeLevel);
-   ExtExpert.VDelay(Signal_VDelayMinutes);
-   ExtExpert.VUse(Signal_VUse);
-   
 //--- Creating filter CSignalSAR
-   CSignalSAR *filter0=new CSignalSARChange;
+   CSignalSAR *filter0=new CSignalSAR;
    if(filter0==NULL)
      {
       //--- failed
@@ -98,12 +84,11 @@ int OnInit()
      }
    signal.AddFilter(filter0);
 //--- Set filter parameters
-   filter0.Step(Signal_SAR_Step);
-   filter0.Maximum(Signal_SAR_Maximum);
-   filter0.Weight(Signal_SAR_Weight);
- 
-//--- Creating filter CSignalITF
-   CSignalTrend *filter1=new CSignalTrend;
+   filter0.Step(Signal_0_SAR_Step);
+   filter0.Maximum(Signal_0_SAR_Maximum);
+   filter0.Weight(Signal_0_SAR_Weight);
+//--- Creating filter CSignalSAR
+   CSignalSAR *filter1=new CSignalSAR;
    if(filter1==NULL)
      {
       //--- failed
@@ -113,12 +98,11 @@ int OnInit()
      }
    signal.AddFilter(filter1);
 //--- Set filter parameters
-   filter1.TrendPeriod(Signal_STF_TrendPeriod);
-  filter1.TrendMindiff(Signal_STF_TrendMiniff);
-   filter1.Weight(Signal_STF_Weight);
-  
+   filter1.Step(Signal_1_SAR_Step);
+   filter1.Maximum(Signal_1_SAR_Maximum);
+   filter1.Weight(Signal_1_SAR_Weight);
 //--- Creation of trailing object
-   CTrailingPSAR *trailing=new CTrailingPSAR;
+   CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
      {
       //--- failed
@@ -135,8 +119,6 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Set trailing parameters
-   trailing.Step(Trailing_ParabolicSAR_Step);
-   trailing.Maximum(Trailing_ParabolicSAR_Maximum);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

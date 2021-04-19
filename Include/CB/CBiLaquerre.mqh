@@ -12,37 +12,23 @@
 //| Purpose: Class of the "Moving Average" indicator.                |
 //|          Derives from class CIndicator.                          |
 //+------------------------------------------------------------------+
-class CiHull : public CIndicator
+class CiLaquerre : public CIndicator
   {
 protected:
-   int               m_ma_period;
-   int               m_ma_shift;
-   int               m_applied;
-   double            m_divisor;
-   int               m_filter;
+   double               m_gamma;
    string            m_customname;
 
 public:
-                     CiHull(void);
-                    ~CiHull(void);
-/*
-input int                 HMAPeriod=12;           // Period
-input int                 HMAShift=0;             // Shift
-input ENUM_APPLIED_PRICE  InpMAPrice=5;           // Price
-input double              Divisor = 2.0;
-input int     Filter         = 0;
-*/                    
+                     CiLaquerre(void);
+                    ~CiLaquerre(void);
+                   
                     
                     
    //--- methods of access to protected data
-   int               MaPeriod(void)        const { return(m_ma_period); }
-   int               MaShift(void)         const { return(m_ma_shift);  }
-   int               Applied(void)         const { return(m_applied);   }
-   int               Filter(void)         const { return(m_filter);   }
+   int               Gamma(void)        const { return(m_gamma); }
    //--- method of creation
    bool              Create(const string symbol,const ENUM_TIMEFRAMES period,
-                            const int ma_period,const int ma_shift,
-                            const int applied, const int filter);
+                            const double gamma);
    //--- methods of access to indicator data
    double            Main(const int index) const;
    //--- method of identifying
@@ -52,44 +38,38 @@ protected:
    //--- methods of tuning
    virtual bool      Initialize(const string symbol,const ENUM_TIMEFRAMES period,const int num_params,const MqlParam &params[]);
    bool              Initialize(const string symbol,const ENUM_TIMEFRAMES period,
-                                const int ma_period,const int ma_shift,
-                                const int appliend, const double divisor, const int filter);
+                                const double gamma);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
 //+------------------------------------------------------------------+
-CiHull::CiHull(void) : m_ma_period(-1),
-                   m_ma_shift(-1),
-                   m_applied(-1),
-                   m_divisor(2.0),
-                   m_filter(0)
+CiLaquerre::CiLaquerre(void) : m_gamma(0.7)
   {
-    m_customname="CB\\ma\\CB_Hull";
+    m_customname="Laguerre\\laguerre";
   }
 //+------------------------------------------------------------------+
 //| Destructor                                                       |
 //+------------------------------------------------------------------+
-CiHull::~CiHull(void)
+CiLaquerre::~CiLaquerre(void)
   {
   }
 //+------------------------------------------------------------------+
 //| Create indicator "Moving Average"                                |
 //+------------------------------------------------------------------+
-bool CiHull::Create(const string symbol,const ENUM_TIMEFRAMES period,
-                  const int ma_period,const int ma_shift,
-                  const int applied, const int m_filter)
+bool CiLaquerre::Create(const string symbol,const ENUM_TIMEFRAMES period,
+                  double gamma)
   {
 //--- check history
    if(!SetSymbolPeriod(symbol,period))
       return(false);
 //--- create
   //  m_handle=iMA(symbol,period,ma_period,ma_shift,ma_method,applied);
-  m_handle=iCustom(symbol,period,m_customname,   ma_period,ma_shift,applied,2.0,m_filter);
+  m_handle=iCustom(symbol,period,m_customname,   gamma);
 //--- check result
    if(m_handle==INVALID_HANDLE)
       return(false);
 //--- indicator successfully created
-   if(!Initialize(symbol,period,ma_period,ma_shift,applied,2.0,m_filter))
+   if(!Initialize(symbol,period,gamma))
      {
       //--- initialization failed
       IndicatorRelease(m_handle);
@@ -102,43 +82,27 @@ bool CiHull::Create(const string symbol,const ENUM_TIMEFRAMES period,
 //+------------------------------------------------------------------+
 //| Initialize the indicator with universal parameters               |
 //+------------------------------------------------------------------+
-bool CiHull::Initialize(const string symbol,const ENUM_TIMEFRAMES period,const int num_params,const MqlParam &params[])
+bool CiLaquerre::Initialize(const string symbol,const ENUM_TIMEFRAMES period,const int num_params,const MqlParam &params[])
   {
    return(Initialize(symbol,period,
-          (int)params[0].integer_value,
-          (int)params[1].integer_value,
-          (int)params[2].integer_value,
-          (double)params[3].double_value,
-          (int)params[4].integer_value)
+          (int)params[0].double_value)
       );
   }
 //+------------------------------------------------------------------+
 //| Initialize indicator with the special parameters                 |
 //+------------------------------------------------------------------+
-bool CiHull::Initialize(const string symbol, const ENUM_TIMEFRAMES period,
-                     const int ma_period,
-                     const int ma_shift,
-                     const int applied, 
-                     const double divisor, 
-                     const int filter)
+bool CiLaquerre::Initialize(const string symbol, const ENUM_TIMEFRAMES period,
+                      double gamma)
   {
    if(CreateBuffers(symbol,period,1))
      {
       //--- string of status of drawing
-      m_name  ="MA";
-      m_status="("+symbol+","+PeriodDescription()+","+
-               IntegerToString(ma_period)+","+IntegerToString(ma_shift)+","+
-               PriceDescription(applied)+ ",D=" + IntegerToString(divisor) + "F="+ IntegerToString(divisor)+","+ 
-               "H="+IntegerToString(m_handle) + ")";
+      m_name  ="Laquerre";
+      m_status="("+symbol+","+PeriodDescription()+", ("+ DoubleToString(gamma) + "))";
       //--- save settings
-      m_ma_period=ma_period;
-      m_ma_shift =ma_shift;
-      m_applied  =applied;
-      m_divisor=divisor;
-      m_filter=filter;
+      m_gamma=gamma;
       //--- create buffers
       ((CIndicatorBuffer*)At(0)).Name("MAIN_LINE");
-      ((CIndicatorBuffer*)At(0)).Offset(ma_shift);
       //--- ok
       return(true);
      }
@@ -148,7 +112,7 @@ bool CiHull::Initialize(const string symbol, const ENUM_TIMEFRAMES period,
 //+------------------------------------------------------------------+
 //| Access to buffer of "Moving Average"                             |
 //+------------------------------------------------------------------+
-double CiHull::Main(const int index) const
+double CiLaquerre::Main(const int index) const
   {
    CIndicatorBuffer *buffer=At(0);
 //--- check

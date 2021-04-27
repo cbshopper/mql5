@@ -50,11 +50,8 @@ public:
 
 
    bool              CheckClose(void);
-   //  virtual bool      InitSignal(CExpertSignalCB *signal);
    void              MaxPositions(int value) {maxPositions=value;}
    void              MultiOrderMode(bool value) {allowMultiOrder=value;}
-   int               MaxOrders(void) {return maxPositions;}
-   bool              MultiOrderMode(void) {return allowMultiOrder;}
    void              MinBarDiff(int value) {minBarDiff=value;}
    //--- processing (main method)
    virtual bool      Processing(void);

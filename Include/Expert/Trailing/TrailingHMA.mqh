@@ -8,10 +8,10 @@
 // wizard description start
 //+------------------------------------------------------------------+
 //| Description of the class                                         |
-//| Title=Trailing Stop based on MA                                  |
+//| Title=Trailing Stop based on HMA                                 |
 //| Type=Trailing                                                    |
 //| Name=HMA                                                          |
-//| Class=CTrailingMA                                                |
+//| Class=CTrailingHMA                                                |
 //| Page=                                                            |
 //| Parameter=Period,int,12,Period of MA                             |
 //| Parameter=Shift,int,0,Shift of MA                                |

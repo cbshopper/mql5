@@ -109,7 +109,7 @@ int OnInit()
    filter0.Method(Signal_3EMA_Method);
    filter0.Applied(Signal_3EMA_Applied);
    filter0.UseMACross(Signal_3EMA_UseMACross);
-   filter0.UseMACross(Signal_3EMA_UseStoSignal);
+   filter0.UseStoSignal(Signal_3EMA_UseStoSignal);
    
    filter0.StoK(Signal_3EMA_StoK);
    filter0.StoD(Signal_3EMA_StoD);

@@ -16,14 +16,8 @@
 //+------------------------------------------------------------------+
 class CExpertSignal : public CExpertBase
   {
-protected:   bool               m_exitsignal;
+protected:   int               m_exitsignal;
 public:   void              SetExit(bool value)        { m_exitsignal=value;      }
-public:  bool              GetExit(void)               { return m_exitsignal; }
-public:  double            Direction(bool OnlyExit);
-public:  double            DirectionX(void);
-public:    void              SetDirectionX()         { m_direction=DirectionX(); }
-public:    void              SetDirection(bool OnlyExit)         { m_direction=Direction(OnlyExit); }
-public:    double            GetDirection(void)         {return m_direction;}
   
   
 protected:
@@ -112,8 +106,7 @@ CExpertSignal::CExpertSignal(void) : m_base_price(0.0),
                                      m_stop_level(0.0),
                                      m_take_level(0.0),
                                      m_expiration(0),
-                                     m_direction(EMPTY_VALUE),
-                                     m_exitsignal(false)
+                                     m_direction(EMPTY_VALUE)
   {
   }
 //+------------------------------------------------------------------+

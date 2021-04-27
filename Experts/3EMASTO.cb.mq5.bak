@@ -47,20 +47,20 @@ input int                Signal_3EMA_StoLevel = 20;           // Sto Level
 input bool               Signal_3EMA_UseMACross = false;    // Use Cross of MA2 as Signal
 input bool               Signal_3EMA_UseStoSignal = false;    // Use Stochastic as Signal
 input double             Signal_3EMA_Weight   =1.0;         // 3MA(21,34,50,MODE_SMA,...) Weight [0...1.0]
+/*
 
-input int                Signal_EXIT_MA_PeriodMA    =12;          // Moving Average(12,0,...) Period of averaging
-input int                Signal_EXIT_MA_Shift       =0;           // Moving Average(12,0,...) Time shift
-input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // Moving Average(12,0,...) Method of averaging
-input ENUM_APPLIED_PRICE Signal_EXIT_MA_Applied     =PRICE_CLOSE; // Moving Average(12,0,...) Prices series
-input double             Signal_EXIT_MA_Weight      =1.0;         // Moving Average(12,0,...) Weight [0...1.0]
+input int                Signal_EXIT_MA_PeriodMA    =12;          // EXIT Moving Average(12,0,...) Period of averaging
+input int                Signal_EXIT_MA_Shift       =0;           // EXIT Moving Average(12,0,...) Time shift
+input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // EXIT Moving Average(12,0,...) Method of averaging
+input ENUM_APPLIED_PRICE Signal_EXIT_MA_Applied     =PRICE_CLOSE; // EXIT Moving Average(12,0,...) Prices series
+input double             Signal_EXIT_MA_Weight      =1.0;         // EXIT Moving Average(12,0,...) Weight [0...1.0]
+*/
 
 //--- inputs for trailing
-/*
 input int                Trailing_HMA_Period  =34;          // Period of MA
 input int                Trailing_HMA_Shift   =0;           // Shift of MA
 input ENUM_MA_METHOD     Trailing_HMA_Method  =MODE_EMA;    // Method of averaging
 input ENUM_APPLIED_PRICE Trailing_HMA_Applied =PRICE_CLOSE; // Prices series
-*/
 //--- inputs for money
 input double             Money_FixLot_Percent =10.0;        // Percent
 input double             Money_FixLot_Lots    =0.1;         // Fixed volume
@@ -126,15 +126,17 @@ int OnInit()
    filter0.Offset(Signal_3EMA_Offset);   
    filter0.Weight(Signal_3EMA_Weight);
    
+   /*
+   
+   //--- Creating filter CSignalMA  FOR EXIT
    CSignalMA *filter1=new CSignalMA;
    if(filter1==NULL)
      {
       //--- failed
-      printf(__FUNCTION__+": error creating filter1");
+      printf(__FUNCTION__+": error creating filter0");
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-     
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.PeriodMA(Signal_EXIT_MA_PeriodMA);
@@ -143,9 +145,8 @@ int OnInit()
    filter1.Applied(Signal_EXIT_MA_Applied);
    filter1.Weight(Signal_EXIT_MA_Weight);
    filter1.SetExit(true);
-  
-  
-  /*
+   */
+   
 //--- Creation of trailing object
    CTrailingMA *trailing=new CTrailingMA;
    if(trailing==NULL)
@@ -163,14 +164,11 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-     
-    
 //--- Set trailing parameters
    trailing.Period(Trailing_HMA_Period);
    trailing.Shift(Trailing_HMA_Shift);
    trailing.Method(Trailing_HMA_Method);
    trailing.Applied(Trailing_HMA_Applied);
-  */ 
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

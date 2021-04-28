@@ -13,11 +13,15 @@ class CExpertCB : public CExpert
   {
 
 protected:
-   CPositionInfoCB    m_position;                 // position info object
+   CPositionInfoCB   m_position;                 // position info object
    int               maxPositions;
    int               minBarDiff;
    bool              allowMultiOrder;
 
+   bool              CheckExitSignal();
+   bool              CheckExitLong(void);
+   bool              CheckExitShort(void);
+   void              GetExitSignal(void);
 
    int               v_stoploss;
    int               v_takeprofit;
@@ -71,43 +75,113 @@ CExpertCB::~CExpertCB(void)
 //+------------------------------------------------------------------+
 bool CExpertCB::CheckClose(void)
   {
-   double lot = m_position.Volume();
-
-//--- extended, from PostionCB.mqh
-   if(v_use)
-     {
-      if(m_position.CheckClose(v_delay,v_takeprofit,v_stoploss))   //!changed
-         return(CloseAll(lot));
-     }
-//---
-   bool ret = CExpert::CheckClose();
-   return ret;
-   /*
-   //--- position must be selected before call
+   double lot;
+   lot = m_position.Volume();
+   if(m_position.CheckClose(v_delay,v_takeprofit,v_stoploss))   //!changed
+      return(CloseAll(lot));
+//--- position must be selected before call
    if((lot=m_money.CheckClose(GetPointer(m_position)))!=0.0)
-   return(CloseAll(lot));
-   //--- check for position type
+      return(CloseAll(lot));
+//--- check for position type
    if(m_position.PositionType()==POSITION_TYPE_BUY)
-   {
-   //--- check the possibility of closing the long position / delete pending orders to buy
-   if(CheckCloseLong())
      {
-      DeleteOrdersLong();
-      return(true);
+      //--- check the possibility of closing the long position / delete pending orders to buy
+      if(CheckCloseLong())
+        {
+         DeleteOrdersLong();
+         return(true);
+        }
      }
-   }
    else
-   {
-   //--- check the possibility of closing the short position / delete pending orders to sell
-   if(CheckCloseShort())
      {
-      DeleteOrdersShort();
-      return(true);
+      //--- check the possibility of closing the short position / delete pending orders to sell
+      if(CheckCloseShort())
+        {
+         DeleteOrdersShort();
+         return(true);
+        }
      }
-   }
-   //--- return without operations
+//--- return without operations
    return(false);
-   */
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CExpertCB::GetExitSignal()
+  {
+//  return false;
+//Print(__FUNCTION__);
+   if(m_signal != NULL)
+     {
+      m_signal.SetDirection(true);
+      double d = m_signal.Direction();
+      //  d=m_signal.Direction();
+      // m_signal.setDir(d);
+      //  if(d != 0)
+      Print(__FUNCTION__,": ExitDirection=",d);
+     }
+
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool CExpertCB::CheckExitSignal()
+  {
+   if(m_position.PositionType()==POSITION_TYPE_BUY)
+     {
+      //--- check the possibility of closing the long position / delete pending orders to buy
+      if(CheckExitLong())
+        {
+         DeleteOrdersLong();
+         return(true);
+        }
+     }
+   else
+     {
+      //--- check the possibility of closing the short position / delete pending orders to sell
+      if(CheckExitShort())
+        {
+         DeleteOrdersShort();
+         return(true);
+        }
+     }
+   return(false);
+  }
+//+------------------------------------------------------------------+
+//| Check for long position close or limit/stop order delete         |
+//+------------------------------------------------------------------+
+bool CExpertCB::CheckExitLong(void)
+  {
+  if(m_signal==NULL)
+     return false;
+   double price=EMPTY_VALUE;
+//--- check for long close operations
+   if(m_signal.CheckCloseLong(price))
+     {
+      Print(__FUNCTION__,": CheckExitLong=true");
+      return(CloseLong(price));
+     }
+   Print(__FUNCTION__,": CheckExitLong=false");
+//--- return without operations
+   return(false);
+  }
+//+------------------------------------------------------------------+
+//| Check for short position close or limit/stop order delete        |
+//+------------------------------------------------------------------+
+bool CExpertCB::CheckExitShort(void)
+  {
+    if(m_signal==NULL)
+     return false;
+   double price=EMPTY_VALUE;
+//--- check for short close operations
+   if(m_signal.CheckCloseShort(price))
+     {
+      Print(__FUNCTION__,": CheckExitShort=true");
+      return(CloseShort(price));
+     }
+   Print(__FUNCTION__,": CheckExitShort=false");
+//--- return without operations
+   return(false);
   }
 
 
@@ -117,43 +191,58 @@ bool CExpertCB::CheckClose(void)
 bool CExpertCB::Processing(void)
   {
 
+//if(!allowMultiOrder)
+//  {
+//   return CExpert::Processing();
+//  }
    bool ret=false;
 //--- calculate signal direction once
-//m_signal.SetDirection();
-// m_signal.Direction(false);
-   m_signal.SetDirectionX();
-//   m_signal.SetDirectionX();
-//  Print(__FUNCTION__,": Direction=",m_signal.GetDirection());
+  //m_signal.SetDirection();
+  // m_signal.Direction(false);
+   m_signal.SetDirection(false);
+  //   m_signal.SetDirectionX();
+ //  Print(__FUNCTION__,": Direction=",m_signal.GetDirection());
 //--- check if open positions
    int total=PositionsTotal();
-//  Print(__FUNCTION__,": total Positions=",total);
+ //  Print(__FUNCTION__,": total Positions=",total);
    if(total!=0)
      {
+      GetExitSignal();
       for(int i=total-1; i>=0; i--)
         {
          if(m_position.SelectByIndex(i))
            {
-            //--- open position is available
-            //--- check the possibility of reverse the position
-            if(CheckReverse())
+            //-- check exit signal
+            if(CheckExitSignal())
+               //     if (false)
               {
-               Print(__FUNCTION__,": CheckReverse=true");
+               Print(__FUNCTION__,": CheckExitSignal=true");
                ret=true;
               }
             else
               {
-               //--- check the possibility of closing the position/delete pending orders
-               if(!CheckClose())
+               //--- open position is available
+               //--- check the possibility of reverse the position
+               if(CheckReverse())
                  {
-                  //--- check the possibility of modifying the position
-                  if(CheckTrailingStop())
-                    {
-                     Print(__FUNCTION__,": CheckTrailingStop=true");
-                     ret = true;
-                    }
+                  Print(__FUNCTION__,": CheckReverse=true");
+                  ret=true;
                  }
                else
-                 { Print(__FUNCTION__,": CheckClose=true");}
+                 {
+                  //--- check the possibility of closing the position/delete pending orders
+                  if(!CheckClose())
+                    {
+                     //--- check the possibility of modifying the position
+                     if(CheckTrailingStop())
+                       {
+                        Print(__FUNCTION__,": CheckTrailingStop=true");
+                        ret = true;
+                       }
+                    }
+                  else
+                    { Print(__FUNCTION__,": CheckClose=true");}
+                 }
               }
            }
         }
@@ -219,7 +308,7 @@ bool CExpertCB::Processing(void)
 void CExpertCB::OnTick(void)
   {
 
-// Processing(); return;
+ // Processing(); return;
 //--- check process flag
    if(!m_on_tick_process)
       return;

@@ -25,6 +25,9 @@
 input string             Expert_Title         ="3EMA";      // Document name
 ulong                    Expert_MagicNumber   =17535;       //
 bool                     Expert_EveryTick     =false;       //
+input int            Expert_MaxOrders           = 10;        // max. open Positions
+input bool           Expert_AllowMultiOrders    = true;      // allow multiple open Positions
+input int            Expert_MinBarDiff          = 2;        // min Bar diff between Positions
 //--- inputs for main signal
 input int                Signal_ThresholdOpen =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose=10;          // Signal threshold value to close [0...100]
@@ -32,6 +35,11 @@ input double             Signal_PriceLevel    =0.0;         // Price level to ex
 input double             Signal_StopLevel     =50.0;        // Stop Loss level (in points)
 input double             Signal_TakeLevel     =50.0;        // Take Profit level (in points)
 input int                Signal_Expiration    =4;           // Expiration of pending orders (in bars)
+input int            Signal_VDelayMinutes   =0;
+input bool           Signal_VUse            = false;      // use VTAKE/VSTOP instead fo Take/Stop
+
+
+
 input int                Signal_3EMA_Period0  =21;          // 3MA(21,34,50,MODE_SMA,...) Period of averaging 0
 input int                Signal_3EMA_Period1  =34;          // 3MA(21,34,50,MODE_SMA,...) Period of averaging 1
 input int                Signal_3EMA_Period2  =50;          // 3MA(21,34,50,MODE_SMA,...) Period of averaging 2
@@ -48,6 +56,9 @@ input bool               Signal_3EMA_UseMACross = false;    // Use Cross of MA2 
 input bool               Signal_3EMA_UseStoSignal = false;    // Use Stochastic as Signal
 input double             Signal_3EMA_Weight   =1.0;         // 3MA(21,34,50,MODE_SMA,...) Weight [0...1.0]
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 input int                Signal_EXIT_MA_PeriodMA    =12;          // Moving Average(12,0,...) Period of averaging
 input int                Signal_EXIT_MA_Shift       =0;           // Moving Average(12,0,...) Time shift
 input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // Moving Average(12,0,...) Method of averaging
@@ -81,6 +92,15 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
+
+   ExtExpert.MultiOrderMode(Expert_AllowMultiOrders);
+   ExtExpert.MaxOrders(Expert_MaxOrders);
+   ExtExpert.MinBarDiff(Expert_MinBarDiff);
+   ExtExpert.VStopLevel(Signal_StopLevel);
+   ExtExpert.VTakeLevel(Signal_TakeLevel);
+   ExtExpert.VDelay(Signal_VDelayMinutes);
+   ExtExpert.VUse(Signal_VUse);
+
 //--- Creating signal
    CExpertSignal *signal=new CExpertSignal;
    if(signal==NULL)
@@ -116,16 +136,16 @@ int OnInit()
    filter0.Applied(Signal_3EMA_Applied);
    filter0.UseMACross(Signal_3EMA_UseMACross);
    filter0.UseStoSignal(Signal_3EMA_UseStoSignal);
-   
+
    filter0.StoK(Signal_3EMA_StoK);
    filter0.StoD(Signal_3EMA_StoD);
    filter0.StoSlowing(Signal_3EMA_StoSlowing);
    filter0.StoLevel(Signal_3EMA_StoLevel);
-   
+
    filter0.MinDiff(Signal_3EMA_MinDiff);
-   filter0.Offset(Signal_3EMA_Offset);   
+   filter0.Offset(Signal_3EMA_Offset);
    filter0.Weight(Signal_3EMA_Weight);
-   
+
    CSignalMA *filter1=new CSignalMA;
    if(filter1==NULL)
      {
@@ -134,7 +154,7 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-     
+
    signal.AddFilter(filter1);
 //--- Set filter parameters
    filter1.PeriodMA(Signal_EXIT_MA_PeriodMA);
@@ -142,35 +162,35 @@ int OnInit()
    filter1.Method(Signal_EXIT_MA_Method);
    filter1.Applied(Signal_EXIT_MA_Applied);
    filter1.Weight(Signal_EXIT_MA_Weight);
-   filter1.SetExit(true);
-  
-  
-  /*
-//--- Creation of trailing object
-   CTrailingMA *trailing=new CTrailingMA;
-   if(trailing==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating trailing");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-//--- Add trailing to expert (will be deleted automatically))
-   if(!ExtExpert.InitTrailing(trailing))
-     {
-      //--- failed
-      printf(__FUNCTION__+": error initializing trailing");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-     
-    
-//--- Set trailing parameters
-   trailing.Period(Trailing_HMA_Period);
-   trailing.Shift(Trailing_HMA_Shift);
-   trailing.Method(Trailing_HMA_Method);
-   trailing.Applied(Trailing_HMA_Applied);
-  */ 
+   filter1.Invert(0);  //EXIT
+
+
+   /*
+   //--- Creation of trailing object
+    CTrailingMA *trailing=new CTrailingMA;
+    if(trailing==NULL)
+      {
+       //--- failed
+       printf(__FUNCTION__+": error creating trailing");
+       ExtExpert.Deinit();
+       return(INIT_FAILED);
+      }
+   //--- Add trailing to expert (will be deleted automatically))
+    if(!ExtExpert.InitTrailing(trailing))
+      {
+       //--- failed
+       printf(__FUNCTION__+": error initializing trailing");
+       ExtExpert.Deinit();
+       return(INIT_FAILED);
+      }
+
+
+   //--- Set trailing parameters
+    trailing.Period(Trailing_HMA_Period);
+    trailing.Shift(Trailing_HMA_Shift);
+    trailing.Method(Trailing_HMA_Method);
+    trailing.Applied(Trailing_HMA_Applied);
+   */
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

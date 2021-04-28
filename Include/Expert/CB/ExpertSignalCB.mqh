@@ -4,17 +4,19 @@
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 
-#property copyright "Copyright 2021, MetaQuotes Software Corp."
-#property link      "https://www.mql5.com"
 #define SELL_FORBIDDEN 9999
 #define BUY_FORBIDDEN -9999
+/*
+#property copyright "Copyright 2021, MetaQuotes Software Corp."
+#property link      "https://www.mql5.com"
+
 
 #include <Expert\ExpertSignal.mqh>
 
 
 
 
-/*
+
 
 //+------------------------------------------------------------------+
 class CExpertSignalCB : public CExpertSignal
@@ -144,6 +146,8 @@ double CExpertSignal::DirectionX(void)
    return(result);
   }
 
+
+/*
 //+------------------------------------------------------------------+
 //| Detecting the "weighted" direction                               |
 //+------------------------------------------------------------------+
@@ -273,3 +277,4 @@ double CExpertSignal::Direction(bool OnlyExit)
 
 
 //+------------------------------------------------------------------+
+*/

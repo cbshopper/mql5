@@ -111,30 +111,6 @@ bool     CPositionInfoCB:: CheckTakeProfit(int tp, int delay)
 //   int tp = VTakeProfit();
    if(tp==0)
       return false;
-   /*
-   double swp=Swap();
-   double price = PriceCurrent();
-   double tp_price = 0;
-   ENUM_POSITION_TYPE type=PositionType();
-   if(type == POSITION_TYPE_BUY)
-     {
-      tp_price =   PriceOpen() + swp +tp*Point() ;
-     }
-   else
-     {
-      tp_price = PriceOpen() - swp -tp*Point() ;
-     }
-
-   datetime now = iTime(NULL,0,0);
-   datetime open = Time();
-   int age = now-open;
-   int diff = PeriodSeconds(PERIOD_CURRENT);
-   //  Print(__FUNCTION__,": age=",age, " diff=",diff," tp_price=",tp_price," price=",price," type=",type);
-   if(age > diff)
-     {
-      ret = price > tp_price;
-     }
-     */
 
    if(checkTime(delay))
      {

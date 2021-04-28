@@ -30,6 +30,11 @@
 input string         Expert_Title                 ="SAR7";   // Document name
 ulong                Expert_MagicNumber           =13930;    //
 bool                 Expert_EveryTick             =false;    //
+input int            Expert_MaxOrders           = 10;        // max. open Positions
+input bool           Expert_AllowMultiOrders    = true;      // allow multiple open Positions
+input int            Expert_MinBarDiff          = 2;        // min Bar diff between Positions
+
+
 //--- inputs for main signal
 input int            Signal_ThresholdOpen         =10;       // Signal threshold value to open [0...100]
 input int            Signal_ThresholdClose        =10;       // Signal threshold value to close [0...100
@@ -39,9 +44,6 @@ input double         Signal_TakeLevel             =50.0;     // Take Profit leve
 input int            Signal_Expiration            =4;        // Expiration of pending orders (in bars)
 input int            Signal_VDelayMinutes   =0;
 input bool           Signal_VUse            = false;      // use VTAKE/VSTOP instead fo Take/Stop
-input int            Signal_MaxOrders           = 10;
-input bool           Signal_AllowMultiOrders    = true;
-input int            Signal_MinBarDiff          = 2;
 
 input double         Signal_SAR_Step              =0.02;     // Parabolic SAR(0.02,0.2) Speed increment
 input double         Signal_SAR_Maximum           =0.2;      // Parabolic SAR(0.02,0.2) Maximum rate
@@ -85,12 +87,15 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   ExtExpert.MultiOrderMode(Signal_AllowMultiOrders);
-   ExtExpert.MaxOrders(Signal_MaxOrders);
-   ExtExpert.MinBarDiff(Signal_MinBarDiff);
-  
+   ExtExpert.MultiOrderMode(Expert_AllowMultiOrders);
+   ExtExpert.MaxOrders(Expert_MaxOrders);
+   ExtExpert.MinBarDiff(Expert_MinBarDiff);
+   ExtExpert.VStopLevel(Signal_StopLevel);
+   ExtExpert.VTakeLevel(Signal_TakeLevel);
+   ExtExpert.VDelay(Signal_VDelayMinutes);
+   ExtExpert.VUse(Signal_VUse);
 //--- Creating signal
-   CExpertSignalCB *signal=new CExpertSignalCB;
+   CExpertSignal *signal=new CExpertSignal;
    if(signal==NULL)
      {
       //--- failed
@@ -107,10 +112,6 @@ int OnInit()
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
    
-   ExtExpert.VStopLevel(Signal_StopLevel);
-   ExtExpert.VTakeLevel(Signal_TakeLevel);
-   ExtExpert.VDelay(Signal_VDelayMinutes);
-   ExtExpert.VUse(Signal_VUse);
    
 //--- Creating filter CSignalSAR
   //CSignalSARChange *filter0=new CSignalSARChange;
@@ -142,23 +143,7 @@ int OnInit()
   filter1.TrendMindiff(Signal_STF_TrendMiniff);
    filter1.Weight(Signal_STF_Weight);
 
-//=======================================================================================
 
-   CExpertSignalCB *exit_signal=new CExpertSignalCB;
-   if(exit_signal==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating signal");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-   ExtExpert.InitExitSignal(exit_signal);
-   exit_signal.ThresholdOpen(1000);
-   exit_signal.ThresholdClose(Signal_ThresholdClose);
-   exit_signal.PriceLevel(0);
-   exit_signal.StopLevel(0);
-   exit_signal.TakeLevel(0);
-   exit_signal.Expiration(0);
 //--- Creating filter CSignalSAR FOR EXIT !!!!!
 //   CSignalSARChange *filter2=new CSignalSARChange;
     CSignalSAR *filter2=new CSignalSAR;
@@ -169,11 +154,12 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   exit_signal.AddFilter(filter2);
+   signal.AddFilter(filter2);
 //--- Set filter parameters
    filter2.Step(Exit_Signal_SAR_Step);
    filter2.Maximum(Exit_Signal_SAR_Maximum);
    filter2.Weight(Exit_Signal_SAR_Weight);
+   filter2.Invert(-1);   // Exit-Signal
 
 //=======================================================================================
 /*

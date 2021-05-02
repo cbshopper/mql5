@@ -9,11 +9,13 @@
 //+------------------------------------------------------------------+
 //| Include                                                          |
 //+------------------------------------------------------------------+
+#include <Expert\CB\ExpertCB.mqh>
 #include <Expert\Expert.mqh>
 //--- available signals
 #include <Expert\Signal\Signal3MA.mqh>
 //--- available trailing
 #include <Expert\Trailing\TrailingMA.mqh>
+#include <Expert\Trailing\TrailingNone.mqh>
 //--- available money management
 #include <Expert\Money\MoneyFixedLot.mqh>
 //+------------------------------------------------------------------+
@@ -23,6 +25,11 @@
 input string             Expert_Title         ="3EMA";      // Document name
 ulong                    Expert_MagicNumber   =17535;       //
 bool                     Expert_EveryTick     =false;       //
+input int            Expert_MaxPositions           = 10;        // max. open Positions
+input bool           Expert_AllowMultiOrders    = true;      // allow multiple open Positions
+input int            Expert_MinBarDiff          = 2;        // min Bar diff between Positions
+input int            Expert_VDelayMinutes   =60;          // delay of virtual stops
+input bool           Expert_VUse            = true;      // use VTAKE/VSTOP instead fo Take/Stop
 //--- inputs for main signal
 input int                Signal_ThresholdOpen =10;          // Signal threshold value to open [0...100]
 input int                Signal_ThresholdClose=10;          // Signal threshold value to close [0...100]
@@ -35,25 +42,30 @@ input int                Signal_3EMA_Period1  =34;          // 3MA(21,34,50,MODE
 input int                Signal_3EMA_Period2  =50;          // 3MA(21,34,50,MODE_SMA,...) Period of averaging 2
 input ENUM_MA_METHOD     Signal_3EMA_Method   =MODE_SMA;    // 3MA(21,34,50,MODE_SMA,...) Method of averaging
 input ENUM_APPLIED_PRICE Signal_3EMA_Applied  =PRICE_CLOSE; // 3MA(21,34,50,MODE_SMA,...) Prices series
-input int                Signal_3EMA_Offset   = 3;          // 3MA Shift Offset of previous MA
-input bool               Signal_3EMA_UseMACross = false;    // Use Cross of MA2 as Signal
-input int                Signal_3EMA_MinDiff = 1;           // min. Diff of MA2
+input int                Signal_3EMA_Offset    =3;            // 3MA(21,34,50,MODE_SMA,...) Shift Offset of previous MA
+input bool               Signal_3EMA_UseMACross=false;        // 3MA(21,34,50,MODE_SMA,...) Use Cross of MA2 as Signal
+input int                Signal_3EMA_MinDiff   =1;            // 3MA(21,34,50,MODE_SMA,...) min. Diff of MA2
 
 
 input double             Signal_3EMA_Weight   =1.0;         // 3MA(21,34,50,MODE_SMA,...) Weight [0...1.0]
 
 //--- inputs for trailing
-input int                Trailing_HMA_Period  =34;          // Period of MA
-input int                Trailing_HMA_Shift   =0;           // Shift of MA
-input ENUM_MA_METHOD     Trailing_HMA_Method  =MODE_EMA;    // Method of averaging
-input ENUM_APPLIED_PRICE Trailing_HMA_Applied =PRICE_CLOSE; // Prices series
+//input int                Trailing_MA_Period  =34;          // Period of MA
+//input int                Trailing_MA_Shift   =0;           // Shift of MA
+//input ENUM_MA_METHOD     Trailing_MA_Method  =MODE_EMA;    // Method of averaging
+//input ENUM_APPLIED_PRICE Trailing_MA_Applied =PRICE_CLOSE; // Prices series
 //--- inputs for money
 input double             Money_FixLot_Percent =10.0;        // Percent
 input double             Money_FixLot_Lots    =0.1;         // Fixed volume
 //+------------------------------------------------------------------+
 //| Global expert object                                             |
 //+------------------------------------------------------------------+
+#ifdef CEXPERT_CB
+CExpertCB ExtExpert;
+#else 
 CExpert ExtExpert;
+#endif
+
 //+------------------------------------------------------------------+
 //| Initialization function of the expert                            |
 //+------------------------------------------------------------------+
@@ -67,6 +79,16 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
+#ifdef CEXPERT_CB     
+   ExtExpert.MultiOrderMode(Expert_AllowMultiOrders);
+   ExtExpert.MaxPositions(Expert_MaxPositions);
+   ExtExpert.MinBarDiff(Expert_MinBarDiff);
+   ExtExpert.StopLevel(Signal_StopLevel);
+   ExtExpert.TakeLevel(Signal_TakeLevel);
+   ExtExpert.VDelay(Expert_VDelayMinutes);
+   ExtExpert.VUse(Expert_VUse);
+#endif    
+
 //--- Creating signal
    CExpertSignal *signal=new CExpertSignal;
    if(signal==NULL)
@@ -100,12 +122,13 @@ int OnInit()
    filter0.Period2(Signal_3EMA_Period2);
    filter0.Method(Signal_3EMA_Method);
    filter0.Applied(Signal_3EMA_Applied);
+   filter0.Offset(Signal_3EMA_Offset);   
    filter0.UseMACross(Signal_3EMA_UseMACross);
    filter0.MinDiff(Signal_3EMA_MinDiff);
-   filter0.Offset(Signal_3EMA_Offset);   
    filter0.Weight(Signal_3EMA_Weight);
 //--- Creation of trailing object
-   CTrailingMA *trailing=new CTrailingMA;
+  // CTrailingMA *trailing=new CTrailingMA;
+  CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)
      {
       //--- failed
@@ -122,10 +145,10 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- Set trailing parameters
-   trailing.Period(Trailing_HMA_Period);
-   trailing.Shift(Trailing_HMA_Shift);
-   trailing.Method(Trailing_HMA_Method);
-   trailing.Applied(Trailing_HMA_Applied);
+ //  trailing.Period(Trailing_MA_Period);
+ //  trailing.Shift(Trailing_MA_Shift);
+  // trailing.Method(Trailing_MA_Method);
+ //  trailing.Applied(Trailing_MA_Applied);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)

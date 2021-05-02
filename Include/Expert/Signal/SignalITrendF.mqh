@@ -7,6 +7,7 @@
 #include <CB\CB_IndicatorHelper.mqh>
 #define SELL_FORBIDDEN 9999
 #define BUY_FORBIDDEN -9999
+#define IGNORE_ME -88888888
 
 // wizard description start
 //+------------------------------------------------------------------+
@@ -83,7 +84,7 @@ double CSignalTrend::Direction(void)
    if (m0 > m1) return (SELL_FORBIDDEN); 
    if (m0 < m1  ) return (BUY_FORBIDDEN) ;
 //--- condition OK
-   return(0.0);
+   return(IGNORE_ME);
   }
  
 //+------------------------------------------------------------------+

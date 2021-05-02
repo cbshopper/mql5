@@ -17,9 +17,7 @@
 class CExpertSignal : public CExpertBase
   {
 
-#include "CB\ExpertSignalExt.mqh"
-  
-  
+#include "CB\ExpertSignalExt1.mqh"
 protected:
    //--- variables
    double            m_base_price;     // base price for detection of level of entering (and/or exit?)
@@ -38,7 +36,6 @@ protected:
    double            m_take_level;     // level of placing of the "take profit" order relatively to the open price
    int               m_expiration;     // time of expiration of a pending order in bars
    double            m_direction;      // weighted direction
-  
 
 public:
                      CExpertSignal(void);
@@ -58,7 +55,6 @@ public:
    void              StopLevel(double value)   { m_stop_level=value;      }
    void              TakeLevel(double value)   { m_take_level=value;      }
    void              Expiration(int value)     { m_expiration=value;      }
-  
    //--- method of initialization of the object
    void              Magic(ulong value);
    //--- method of verification of settings
@@ -107,7 +103,6 @@ CExpertSignal::CExpertSignal(void) : m_base_price(0.0),
                                      m_take_level(0.0),
                                      m_expiration(0),
                                      m_direction(EMPTY_VALUE)
-                                     
   {
   }
 //+------------------------------------------------------------------+
@@ -469,4 +464,4 @@ double CExpertSignal::Direction(void)
    return(result);
   }
 //+------------------------------------------------------------------+
-#include "CB\ExpertSignalCB.mqh"
+#include "CB\ExpertSignalExt2.mqh"

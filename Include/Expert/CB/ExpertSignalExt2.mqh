@@ -6,6 +6,7 @@
 
 #define SELL_FORBIDDEN 9999
 #define BUY_FORBIDDEN -9999
+#define IGNORE_ME -88888888
 /*
 #property copyright "Copyright 2021, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
@@ -78,7 +79,7 @@ double CExpertSignal::DirectionX(void)
    int    total= 0;
    total= m_filters.Total();
 
-   Print(__FUNCTION__,": number=",number,": result=",result, " total=",total, " m_weight=",m_weight," longCond=",longCond, " shortCond=",shortCond);
+  // Print(__FUNCTION__,": number=",number,": result=",result, " total=",total, " m_weight=",m_weight," longCond=",longCond, " shortCond=",shortCond);
 
 //--- loop by filters
    for(int i=0; i<total; i++)
@@ -93,11 +94,12 @@ double CExpertSignal::DirectionX(void)
       filter=m_filters.At(i);
 
       //--- check pointer
-      Print(__FUNCTION__,": filter=",filter);
+    //  Print(__FUNCTION__,": filter=",filter);
       if(filter==NULL)
          continue;
 
       direction=filter.DirectionX();   // alle Filter in der Kette
+      Print(__FUNCTION__,": LOOP: i=",i," of ", total," number=",number,": result=",result, " direction=",direction," filter=",filter);
 
       //--- the "prohibition" signal
       if(direction==EMPTY_VALUE)
@@ -116,7 +118,11 @@ double CExpertSignal::DirectionX(void)
          direction=0;
          number--;
         }
-
+        if(direction==IGNORE_ME)
+        {
+         direction=0;
+         number--;
+        }
       if(direction != 0.0)
         {
          //--- check of flag of inverting the signal of filter
@@ -141,7 +147,7 @@ double CExpertSignal::DirectionX(void)
    if(result < 0 && sell_forbidden)
       result=EMPTY_VALUE;
 //
-   Print(__FUNCTION__,": result=",result," buy_forbidden=",buy_forbidden," sell_forbidden=",sell_forbidden);
+   Print(__FUNCTION__,": result=",result," buy_forbidden=",buy_forbidden," sell_forbidden=",sell_forbidden, " number=", number);
 //--- return the result
    return(result);
   }

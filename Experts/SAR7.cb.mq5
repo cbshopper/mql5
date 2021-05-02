@@ -55,12 +55,15 @@ input int            Signal_STF_TrendMiniff       =0;        // SignalTrendFilte
 input double         Exit_Signal_SAR_Step              =0.01;     //EXIT Parabolic SAR(0.02,0.2) Speed increment
 input double         Exit_Signal_SAR_Maximum           =0.1;      //EXIT Parabolic SAR(0.02,0.2) Maximum rate
 input double         Exit_Signal_SAR_Weight        =1.0;      //EXIT Parabolic SAR(0.02,0.2) EXITWeight [0...1.0]
-//
-//input int                Exit_Signal_MA_PeriodMA    =12;          // EXIT Moving Average(12,0,...) Period of averaging
-//input int                Exit_Signal_MA_Shift       =0;           // EXIT Moving Average(12,0,...) Time shift
-//input ENUM_MA_METHOD     Exit_Signal_MA_Method      =MODE_SMA;    // EXIT Moving Average(12,0,...) Method of averaging
-//input ENUM_APPLIED_PRICE Exit_Signal_MA_Applied     =PRICE_CLOSE; // EXIT Moving Average(12,0,...) Prices series
-//input double             Exit_Signal_MA_ExitWeight      =1.0;         // EXIT Moving Average(12,0,...) EXITWeight [0...1.0]
+
+
+input int                Signal_EXIT_MA_PeriodMA    =12;          // Moving Average(12,0,...) Period of averaging
+input int                Signal_EXIT_MA_Shift       =0;           // Moving Average(12,0,...) Time shift
+input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // Moving Average(12,0,...) Method of averaging
+input ENUM_APPLIED_PRICE Signal_EXIT_MA_Applied     =PRICE_CLOSE; // Moving Average(12,0,...) Prices series
+input double             Signal_EXIT_MA_Weight      =1.0;         // Moving Average(12,0,...) Weight [0...1.0]
+
+
 
 //--- inputs for trailing
 //input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
@@ -144,7 +147,44 @@ int OnInit()
    filter1.Weight(Signal_STF_Weight);
 
 
-//--- Creating filter CSignalSAR FOR EXIT !!!!!
+
+//================================== EXIT SIGNAL ============================================
+//--- Creating exit_signal
+   CExpertSignal *exit_signal=new CExpertSignal;
+   if(signal==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating signal");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+//---
+   ExtExpert.InitExitSignal(exit_signal);
+   exit_signal.ThresholdOpen(10);
+   exit_signal.ThresholdClose(200);
+   exit_signal.PriceLevel(0);
+   exit_signal.StopLevel(0);
+   exit_signal.TakeLevel(0);
+   exit_signal.Expiration(0);
+
+   CSignalMA *filterX=new CSignalMA;
+   if(filter1==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating filter1");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+
+   exit_signal.AddFilter(filter1);
+//--- Set filter parameters
+   filterX.PeriodMA(Signal_EXIT_MA_PeriodMA);
+   filterX.Shift(Signal_EXIT_MA_Shift);
+   filterX.Method(Signal_EXIT_MA_Method);
+   filterX.Applied(Signal_EXIT_MA_Applied);
+   filterX.Weight(Signal_EXIT_MA_Weight);
+   
+   //--- Creating filter CSignalSAR FOR EXIT !!!!!
 //   CSignalSARChange *filter2=new CSignalSARChange;
     CSignalSAR *filter2=new CSignalSAR;
    if(filter2==NULL)
@@ -154,38 +194,15 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-   signal.AddFilter(filter2);
+   exit_signal.AddFilter(filter2);
 //--- Set filter parameters
    filter2.Step(Exit_Signal_SAR_Step);
    filter2.Maximum(Exit_Signal_SAR_Maximum);
    filter2.Weight(Exit_Signal_SAR_Weight);
-   filter2.Invert(-1);   // Exit-Signal
+   
+   
+//==========================================================================================
 
-//=======================================================================================
-/*
-//--- Creation of trailing object
-   CTrailingPSAR *trailing=new CTrailingPSAR;
-   if(trailing==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating trailing");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-
-//--- Add trailing to expert (will be deleted automatically))
-   if(!ExtExpert.InitTrailing(trailing))
-     {
-      //--- failed
-      printf(__FUNCTION__+": error initializing trailing");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-//--- Set trailing parameters
-   trailing.Step(Trailing_ParabolicSAR_Step);
-   trailing.Maximum(Trailing_ParabolicSAR_Maximum);
-   */
-//=======================================================================================
 //--- Creation of trailing object   
       CTrailingNone *trailing=new CTrailingNone;
    if(trailing==NULL)

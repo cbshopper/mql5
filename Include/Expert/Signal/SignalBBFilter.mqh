@@ -6,6 +6,7 @@
 #include <Expert\ExpertSignal.mqh>
 #define SELL_FORBIDDEN 9999
 #define BUY_FORBIDDEN -9999
+#define TRADE_FORBIDDEN -11111111
 #define IGNORE_ME -88888888
 
 // wizard description start
@@ -149,9 +150,11 @@ double CSignalBBFilter::Direction(void)
    double ask=SymbolInfoDouble(Symbol(),SYMBOL_ASK); 
    double bid=SymbolInfoDouble(Symbol(),SYMBOL_BID); 
    
-   Print(__FUNCTION__,": SELL_FORBIDDEN=",ask < bblower, " BUY_FORBIDDEN=",bid > bbupper);
-   if (bid < bblower) return (SELL_FORBIDDEN); 
-   if (ask > bbupper ) return (BUY_FORBIDDEN) ;
+   //Print(__FUNCTION__,": SELL_FORBIDDEN=",ask < bblower, " BUY_FORBIDDEN=",bid > bbupper);
+   //if (bid < bblower || bid > bbupper ) return (SELL_FORBIDDEN); 
+   //if (ask > bbupper  || ask < bblower) return (BUY_FORBIDDEN) ;
+   
+   if (bid < bblower || bid > bbupper) return (TRADE_FORBIDDEN) ;
 //--- condition OK
    return(IGNORE_ME);
   }

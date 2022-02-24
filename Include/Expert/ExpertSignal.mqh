@@ -16,8 +16,6 @@
 //+------------------------------------------------------------------+
 class CExpertSignal : public CExpertBase
   {
-
-#include "CB\ExpertSignalExt1.mqh"
 protected:
    //--- variables
    double            m_base_price;     // base price for detection of level of entering (and/or exit?)
@@ -464,4 +462,3 @@ double CExpertSignal::Direction(void)
    return(result);
   }
 //+------------------------------------------------------------------+
-#include "CB\ExpertSignalExt2.mqh"

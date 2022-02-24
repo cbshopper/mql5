@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 #property description "Moving Averages bases on NonLagMA"
 
-#include "hullMA.mqh"
+#include <CB\\hullMA.mqh>
 #include <MovingAverages.mqh>
 
 
@@ -38,10 +38,10 @@ int iMa2=0;
 //+------------------------------------------------------------------+
 int OnInit(void)
   {
-  
+
    ArraySetAsSeries(ExtMacdBuffer,true);
    ArraySetAsSeries(ExtSignalBuffer,true);
-   
+
    IndicatorSetInteger(INDICATOR_DIGITS,Digits());
 //--- drawing settings
 
@@ -101,28 +101,24 @@ int OnCalculate(const int rates_total,
   {
    int i,limit;
 //---
-    if (prev_calculated == 0)
-    limit = rates_total - InpSlowEMA + 1 ;
-   else limit = prev_calculated - 1;
+   if(prev_calculated == 0)
+      limit = rates_total - InpSlowEMA + 1 ;
+   else
+      limit = prev_calculated - 1;
 
    for(i=limit; i>=0; i--)
      {
-        double mafast =  iHullFast.calculate(i)  ;
-        double maslow =  iHullSlow.calculate(i);
-      //double mafast = GetIndicatorValue(iMa1,i);
-      //double maslow = GetIndicatorValue(iMa2,i);
+      double mafast =  iHullFast.calculate(i)  ;
+      double maslow =  iHullSlow.calculate(i);
 
-    //  ExtMacdBuffer[i]= mafast ; //high[i]; // mafast;
-    //  ExtSignalBuffer[i]=maslow ; // low[i];
-    
-            ExtMacdBuffer[i] = mafast - maslow;
-            if(InPoints)
-              {
-               ExtMacdBuffer[i] = ExtMacdBuffer[i]/Point();
-              }
-              
+      ExtMacdBuffer[i] = mafast - maslow;
+      if(InPoints)
+        {
+         ExtMacdBuffer[i] = ExtMacdBuffer[i]/Point();
+        }
+
      }
- 
+
 //--- signal line counted in the 2-nd buffer
    SimpleMAOnBuffer(rates_total,prev_calculated,0,InpSignalSMA,ExtMacdBuffer,ExtSignalBuffer);
 //--- done

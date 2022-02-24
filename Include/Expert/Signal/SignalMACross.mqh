@@ -14,7 +14,7 @@
 //| Class=CSignalMACross                                             |
 //| Page=signal_ma                                                   |
 //| Parameter=PeriodMA,int,12,Period of averaging                    |
-//| Parameter=MinBarHigh,int,0,Minimum Bar High-Low-Diff             |
+//| Parameter=MinHigh,int,0,Minimum Bar High-Low-Diff             |
 //| Parameter=Method,ENUM_MA_METHOD,MODE_SMA,Method of averaging     |
 //| Parameter=Applied,ENUM_APPLIED_PRICE,PRICE_CLOSE,Prices series   |
 //+------------------------------------------------------------------+

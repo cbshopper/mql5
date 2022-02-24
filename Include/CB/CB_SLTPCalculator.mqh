@@ -3,6 +3,7 @@
 //|                                      Copyright 2018, CompanyName |
 //|                                       http://www.companyname.net |
 //+------------------------------------------------------------------+
+#include <cb\CB_IndicatorHelper.mqh>
 #include <cb\CBUtils5.mqh>
 
 

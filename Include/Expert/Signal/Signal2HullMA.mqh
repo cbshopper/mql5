@@ -28,11 +28,11 @@
 //|          the 'Hull Moving Average' indicator.                    |
 //| Is derived from the CExpertSignal class.                         |
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-class CSignalHullCross : public CExpertSignal
+class CSignalHullMA : public CExpertSignal
   {
 protected:
-   CiHull              m_ma1             // object+indicator
-    CiHull              m_ma2             // object+indicator
+   CiHull              m_ma1  ;           // object+indicator
+    CiHull              m_ma2   ;          // object+indicator
    //+++ adjusted parameters
    int               m_ma_period;      // the "period of averaging" parameter of the indicator
    double            m_ma_factor;

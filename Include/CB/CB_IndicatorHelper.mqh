@@ -13,26 +13,30 @@
 //+------------------------------------------------------------------+
 double GetIndicatorValue(int handle, int index)
   {
-   double ret = GetIndicatorBufferValue(handle,index,0);
+   double ret = GetIndicatorBufferValue(handle, index, 0);
    return ret;
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double GetIndicatorBufferValue(int handle, int index,int bufferno)
+double GetIndicatorBufferValue(int handle, int index, int bufferno)
   {
-   double ret =0;
+   double ret = -1;
    double vals[1];
-   int errno=0;
-   if(CopyBuffer(handle,bufferno,index,1,vals) > 0)
+   int errno = 0;
+  
+   if(CopyBuffer(handle, bufferno, index, 1, vals) > 0)
      {
       ret = vals[0];
+ //     Print(__FUNCTION__, " ret=", ret, "vals=", vals[0], " index=",index, " bufferno=",bufferno);
      }
-     else
+   else
      {
-         errno = GetLastError();
+      errno = GetLastError();
+      Print(__FUNCTION__, " Error=", errno);
      }
    return ret;
   }
-  
- #endif
+
+#endif
+//+------------------------------------------------------------------+

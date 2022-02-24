@@ -7,62 +7,11 @@
 #define SELL_FORBIDDEN 9999
 #define BUY_FORBIDDEN -9999
 #define IGNORE_ME -88888888
-/*
-#property copyright "Copyright 2021, MetaQuotes Software Corp."
-#property link      "https://www.mql5.com"
 
-
-#include <Expert\ExpertSignal.mqh>
-
-
-
-
-
-
-//+------------------------------------------------------------------+
-class CExpertSignalCB : public CExpertSignal
-  {
-
-protected:
-public:
-                     CExpertSignalCB(void);
-                    ~CExpertSignalCB(void);
-   void              IsExitSignal(bool value)   {m_exitsignal = value;}
-   double            Direction(bool OnlyExit);
-   void              SetDirection(bool OnlyExit)         { m_direction=Direction(OnlyExit); }
-   double            GetDirection(void)         {return m_direction;}
-
-   //--- methods for working with additional filters
-   virtual bool      AddFilter(CExpertSignalCB *filter, int asExitSignal);
-  };
-//+------------------------------------------------------------------+
-//| Constructor                                                      |
-//+------------------------------------------------------------------+
-CExpertSignalCB::CExpertSignalCB(void)
-  {
-  }
-//+------------------------------------------------------------------+
-//| Destructor                                                       |
-//+------------------------------------------------------------------+
-CExpertSignalCB::~CExpertSignalCB(void)
-  {
-  }
-
-//+------------------------------------------------------------------+
-//| Setting an additional filter                                     |
-//+------------------------------------------------------------------+
-bool CExpertSignalCB::AddFilter(CExpertSignalCB *filter, int asExitSignal)
-  {
-
-   filter.SetExit(asExitSignal);
-   bool ret = CExpertSignal::AddFilter(filter);
-   return(ret);
-  }
-*/
 //+------------------------------------------------------------------+
 //| Detecting the "weighted" direction                               |
 //+------------------------------------------------------------------+
-double CExpertSignal::DirectionX(void)
+double CExpertSignal::Direction(void)
   {
    long   mask;
    double direction;

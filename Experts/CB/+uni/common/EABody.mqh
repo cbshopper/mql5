@@ -13,6 +13,7 @@ extern int Expert_OnInit(int barcount=10);
 extern int GetOpenSignal(int shift);
 extern int GetCloseSignal(int shift, int mode,  int ticket);
 
+
 enum ENUM_ORDERMODES
   {
    MODE_MARKET = 0,
@@ -74,18 +75,10 @@ int  OnInit()
    if(ret == INIT_SUCCEEDED)
      {
       Print(__FUNCTION__, ": ", __FILE__, " *****************************************************************************");
-      // VarEntrySignalName = WindowExpertName() + "_ENTRY";
-      // VarExitSignalName = WindowExpertName() + "_EXIT";
-      //      GlobalVariableSet(VarEntrySignalName, 0);
-      //      GlobalVariableSet(VarExitSignalName, 0);
-
-      // if(PendingOrderDiffPips > 0)
+      int mindiff = MarketInfo(Symbol(), MODE_STOPLEVEL);
+      if(PendingOrderDiffPips < mindiff)
         {
-         int mindiff = MarketInfo(Symbol(), MODE_STOPLEVEL);
-         if(PendingOrderDiffPips < mindiff)
-           {
-            PendingOrderDiffPips = mindiff;
-           }
+         PendingOrderDiffPips = mindiff;
         }
         
       POINT = Point();
@@ -93,11 +86,6 @@ int  OnInit()
 
       if(money > MaxAccountValue && MaxAccountValue > 0)
          money = MaxAccountValue;
-
-      //if(MaxBuys > 10)
-      //   MaxBuys=10;
-      //if(MaxSells > 10)
-      //   MaxSells = 10;
 
 #ifdef TESTING
       EventSetTimer(2);
@@ -201,7 +189,7 @@ void Trade(int shift)
      {
       if(USEMOVETOBREAKEVEN)
         {
-         MOVETOBREAKEVEN();
+         MOVETOBREAKEVEN(MagicNumber,WHENTOMOVETOBE,PIPSTOMOVESL);
         }
       changed = CheckForClose(shift);
       if(changed)
@@ -225,7 +213,7 @@ void Trade(int shift)
       if(TrailingStop > 0)
         {
          //   Print(__FUNCTION__,": Set TrailingStop=",TrailingStop);
-           OrdersSetStop(MagicNumber,TrailingStop);
+           PositionsSetStop(MagicNumber,TrailingStop);
         }
      }
   }
@@ -241,8 +229,8 @@ bool CheckForOpen(int shift, ENUM_ORDERMODES mode, int DiffPips, datetime expire
    double lots = 0;
    int lastbar = 0;
  
-   OrderMachine.UpdateOrderList(MagicNumber);   // 1x bei jedem neuen Bar
-   int OrderCnt = OrderMachine.SellOrderCount() + OrderMachine.BuyOrderCount();
+   OrderMachine.UpdateLists(MagicNumber);   // 1x bei jedem neuen Bar
+   int OrderCnt = OrderMachine.SellPositionCount() + OrderMachine.BuyPositionCount();
    
    int signal = GetOpenSignal(shift);
    
@@ -452,74 +440,6 @@ bool CheckForClose(int shift)
 
 
 
-/*
-//+------------------------------------------------------------------+
-//| Calculate optimal lot size                                       |
-//+------------------------------------------------------------------+
-double LotsOptimized(double IncreaseFactor, double MaximumRisk)
-  {
-   double lot = Lots;
-   int    orders = OrdersHistoryTotal();   // history orders total
-   int    losses = 0;                // number of losses orders without a break
-//--- select lot size
-   if(MaximumRisk > 0)
-     {
-      lot = NormalizeDouble(AccountFreeMargin() * MaximumRisk / 1000.0, 1);
-     }
-//--- calcuulate number of losses orders without a break
-   if(IncreaseFactor > 0)
-     {
-      for(int i = orders - 1; i >= 0; i--)
-        {
-         if(OrderSelect(i, SELECT_BY_POS, MODE_HISTORY) == false)
-           {
-            Print(__FUNCTION__, " Error in history!");
-            break;
-           }
-         if(OrderSymbol() != Symbol())
-            continue;
-         //---
-         if(OrderProfit() > 0)
-            break;
-         if(OrderProfit() < 0)
-            losses++;
-        }
-      if(losses > 1)
-         // lot=NormalizeDouble(lot+lot*losses/IncreaseFactor,1);
-         lot = AccountFreeMargin() * IncreaseFactor / 1000.0;
-     }
-//--- minimal allowed volume for trade operations
-   double minlot = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
-   if(lot < minlot)
-     {
-      lot = minlot;
-      Print(__FUNCTION__, " Volume is less than the minimal allowed ,we use ", minlot);
-     }
-// lot=minlot;
-
-//--- maximal allowed volume of trade operations
-   double maxlot = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
-   if(lot > maxlot)
-     {
-      lot = maxlot;
-      Print(__FUNCTION__, " Volume is greater than the maximal allowed,we use ", maxlot);
-     }
-// lot=maxlot;
-
-//--- get minimal step of volume changing
-   double volume_step = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
-   int ratio = (int)MathRound(lot / volume_step);
-   if(MathAbs(ratio * volume_step - lot) > 0.0000001)
-     {
-      lot = ratio * volume_step;
-
-      Print(__FUNCTION__, " Volume is not a multiple of the minimal step ,we use the closest correct volume ", ratio * volume_step);
-     }
-   return(lot);
-
-
-  }
-*/
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -530,7 +450,7 @@ bool CloseOrderSingle(int shift)
    int openbar = 0;
    bool close = false;
    int signal = 0;
-   OrderMachine.UpdateOrderList(MagicNumber);
+   OrderMachine.UpdateLists(MagicNumber);
    
    
 
@@ -581,7 +501,6 @@ bool CheckMoneyForTrade(string symb, double lots, int type)
      marginRequired *= SymbolInfoDouble(Symbol(),SYMBOL_MARGIN_SHORT)  ;
    }
                
-
    double free_margin = AccountInfoDouble(ACCOUNT_MARGIN_FREE); - marginRequired; //                  AccountFreeMarginCheck(symb,type,lots);
    double free_money = AccountInfoDouble(ACCOUNT_EQUITY) - marginRequired;
    double diff = AccountInfoDouble(ACCOUNT_BALANCE) -  AccountInfoDouble(ACCOUNT_EQUITY) ;
@@ -629,18 +548,7 @@ bool CheckMoneyForTrade(string symb, double lots, int type)
    return(true);
   }
   
-  /*
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-int CountTradesxxx()
-  {
-    
-   int count = OrderMachine.OpenOrderTicketCount(MagicNumber);
-   
-   return (count);
-  }
-*/
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -651,15 +559,7 @@ double NDTP(double val)
    if(val < StopLevel * POINT + SPREAD * POINT)
       val = StopLevel * POINT + SPREAD * POINT;
    return(NormalizeDouble(val, Digits()));
-// return(val);
   }
-
-//+------------------------------------------------------------------+
-void MOVETOBREAKEVEN()
-  {
-   MOVETOBREAKEVEN(MagicNumber,WHENTOMOVETOBE,PIPSTOMOVESL);
-  }
-
 
 //+------------------------------------------------------------------+
 double ND(double val)

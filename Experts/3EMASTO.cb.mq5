@@ -15,7 +15,7 @@
 #include <Expert\Signal\Signal3MASTO.mqh>
 #include <Expert\Signal\SignalMACross.mqh>
 #include <Expert\Signal\SignalBBFilter.mqh>
-
+#include <Expert\Signal\SignalStoch.mqh>
 //--- available trailing
 #include <Expert\Trailing\TrailingMA.mqh>
 #include <Expert\Trailing\TrailingNone.mqh>
@@ -69,6 +69,13 @@ input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // EXIT Moving
 input ENUM_APPLIED_PRICE Signal_EXIT_MA_Applied     =PRICE_CLOSE; // EXIT Moving Average(12,0,...) Prices series
 input double             Signal_EXIT_MA_Weight      =1.0;         // EXIT Moving Average(12,0,...) Weight [0...1.0]
 
+input int            Signal_EXIT_Stoch_PeriodK   =8;           // Stochastic(8,3,3,...) K-period
+input int            Signal_EXIT_Stoch_PeriodD   =3;           // Stochastic(8,3,3,...) D-period
+input int            Signal_EXIT_Stoch_PeriodSlow=3;           // Stochastic(8,3,3,...) Period of slowing
+input ENUM_STO_PRICE Signal_EXIT_Stoch_Applied   =STO_LOWHIGH; // Stochastic(8,3,3,...) Prices to apply to
+input double         Signal_EXIT_Stoch_Weight    =1.0;         // Stochastic(8,3,3,...) Weight [0...1.0]
+
+
 //--- inputs for trailing
 //input int                Trailing_MA_Period  =34;          // Period of MA
 //input int                Trailing_MA_Shift   =0;           // Shift of MA
@@ -112,7 +119,12 @@ int OnInit()
 #endif   
 
 //--- Creating signal
-   CExpertSignal *signal=new CExpertSignal;
+#ifdef CEXPERT_CB
+CExpertSignalCB *signal=new CExpertSignalCB;
+#else 
+CExpertSignal *signal=new CExpertSignal;
+#endif
+   
    if(signal==NULL)
      {
       //--- failed
@@ -176,7 +188,7 @@ int OnInit()
 
 //================================== EXIT SIGNAL ============================================
 //--- Creating exit_signal
-   CExpertSignal *exit_signal=new CExpertSignal;
+   CExpertSignalCB *exit_signal=new CExpertSignalCB;
    if(exit_signal==NULL)
      {
       //--- failed
@@ -210,6 +222,24 @@ int OnInit()
    filter_exit.Method(Signal_EXIT_MA_Method);
    filter_exit.Applied(Signal_EXIT_MA_Applied);
    filter_exit.Weight(Signal_EXIT_MA_Weight);
+   
+//--- Creating filter CSignalStoch
+   CSignalStoch *filterSto=new CSignalStoch;
+   if(filterSto==NULL)
+     {
+      //--- failed
+      printf(__FUNCTION__+": error creating filterSto");
+      ExtExpert.Deinit();
+      return(INIT_FAILED);
+     }
+   exit_signal.AddFilter(filterSto);
+//--- Set filter parameters
+   filterSto.PeriodK(Signal_EXIT_Stoch_PeriodK);
+   filterSto.PeriodD(Signal_EXIT_Stoch_PeriodD);
+   filterSto.PeriodSlow(Signal_EXIT_Stoch_PeriodSlow);
+   filterSto.Applied(Signal_EXIT_Stoch_Applied);
+   filterSto.Weight(Signal_EXIT_Stoch_Weight);
+   filterSto.PatternsUsage(0); 
 //==========================================================================================
 
   //--- Creation of trailing object
@@ -273,6 +303,7 @@ int OnInit()
       return(INIT_FAILED);
      }
 //--- ok
+ExtExpert.Processing();
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+

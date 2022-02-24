@@ -41,6 +41,7 @@ in CODE:
 
 //#include <Expert\CB\ExpertSignal.mqh>
 #include <Expert\CB\PositionCB.mqh>
+#include <Expert\CB\ExpertSignalCB.mqh>
 //#define CExpertSignalCB CExpertSignal
 //+------------------------------------------------------------------+
 class CExpertCB : public CExpert
@@ -48,7 +49,8 @@ class CExpertCB : public CExpert
 
 protected:
    CPositionInfoCB    m_position;                 // position info object
-   CExpertSignal     *exit_signal;                   // trading signals object
+   CExpertSignalCB    *m_signalCB ;                   // trading signals object
+   CExpertSignalCB    *exit_signal;                   // trading signals object
    int               maxPositions;
    int               minBarDiff;
    bool              allowMultiOrder;
@@ -69,15 +71,21 @@ public:
                     ~CExpertCB(void);
    bool              Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong magic=0);
 
-   void              StopLevel(int value) { v_stoploss = value;  m_signal.StopLevel(value); }
-   void              TakeLevel(int value) { v_takeprofit = value; m_signal.TakeLevel(value);  }
+/*
+   void              StopLevel(int value) { v_stoploss = value; if (m_signal != NULL) m_signal.StopLevel(value); }
+   void              TakeLevel(int value) { v_takeprofit = value; if (m_signal != NULL) m_signal.TakeLevel(value);  }
    void              VUse(int value) { v_use = value; if(v_use) {m_signal.TakeLevel(0); m_signal.StopLevel(0);}}
+   */
+   void              StopLevel(int value) { v_stoploss = value;  }
+   void              TakeLevel(int value) { v_takeprofit = value;   }
+   void              VUse(int value) { v_use = value; }
+
    void              VDelay(int value) {v_delay=value*60;}
 
 
 
 
-   bool              CheckClose(void);
+   virtual         bool              CheckClose(void) override;
    void              MaxPositions(int value) {maxPositions=value;}
    void              MultiOrderMode(bool value) {allowMultiOrder=value;}
    void              MinBarDiff(int value) {minBarDiff=value;}
@@ -87,11 +95,12 @@ public:
    //  bool              InitSignal(CExpertSignal *signal);
    bool              InitIndicators(CIndicators *indicators=NULL);
    //bool              InitExitSignal(CExpertSignal *signal);
-   virtual bool      InitExitSignal(CExpertSignal *signal=NULL);
+   virtual bool      InitExitSignal(CExpertSignalCB *signal=NULL);
    void              DeinitExitSignal();
    void              Deinit();
    bool              ValidationSettings();
    void              Magic(ulong value);
+   void              SetSignal(CExpertSignal *sig) { m_signalCB = (CExpertSignalCB*) GetPointer(sig); }
 
   };
 //+------------------------------------------------------------------+
@@ -185,14 +194,14 @@ bool CExpertCB::Init(string symbol,ENUM_TIMEFRAMES period,bool every_tick,ulong 
 //+------------------------------------------------------------------+
 //| Initialization signal object                                     |
 //+------------------------------------------------------------------+
-bool CExpertCB::InitExitSignal(CExpertSignal *signal)
+bool CExpertCB::InitExitSignal(CExpertSignalCB *signal)
   {
    if(exit_signal!=NULL)
       delete exit_signal;
 //---
    if(signal==NULL)
      {
-      if((exit_signal=new CExpertSignal)==NULL)
+      if((exit_signal=new CExpertSignalCB)==NULL)
          return(false);
      }
    else
@@ -298,6 +307,7 @@ bool CExpertCB::CheckClose(void)
 //--- extended, from PostionCB.mqh
    if(v_use)
      {
+      {m_signal.TakeLevel(0); m_signal.StopLevel(0);}
       if(m_position.CheckClose(v_delay,v_takeprofit,v_stoploss))   //!changed
          return(CloseAll(lot));
      }
@@ -397,8 +407,9 @@ bool CExpertCB::Processing(void)
 //m_signal.SetDirection();
 // m_signal.Direction(false);
 //   m_signal.SetDirection();
-   m_signal.SetDirectionX();
-   Print(__FUNCTION__,": ENTRY Direction=",m_signal.GetDirection());
+   SetSignal(m_signal);
+   m_signalCB.SetDirection();
+   Print(__FUNCTION__,": ENTRY Direction=",m_signalCB.GetDirection());
 //--- check if open positions
    int total=PositionsTotal();
 //  Print(__FUNCTION__,": total Positions=",total);
@@ -481,7 +492,7 @@ bool CExpertCB::Processing(void)
    total=PositionsTotal();
    if(!allowMultiOrder)
       maxPositions=1;
-   Print(__FUNCTION__,": ????????????????? ENTRY Direction=",m_signal.GetDirection(), " total=",total," maxPositions=",maxPositions);
+   Print(__FUNCTION__,": ????????????????? ENTRY Direction=",m_signalCB.GetDirection(), " total=",total," maxPositions=",maxPositions);
 
 
    if((total >= maxPositions))
@@ -497,7 +508,7 @@ bool CExpertCB::Processing(void)
      }
 
 //--- check the possibility of opening a position/setting pending order
-   Print(__FUNCTION__,": ????????????????? Direction=",m_signal.GetDirection());
+   Print(__FUNCTION__,": ????????????????? Direction=",m_signalCB.GetDirection());
    if(CheckOpen())
       return(true);
 //--- return without operations

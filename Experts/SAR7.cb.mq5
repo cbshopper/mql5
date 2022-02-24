@@ -56,18 +56,9 @@ input double         Exit_Signal_SAR_Step              =0.01;     //EXIT Parabol
 input double         Exit_Signal_SAR_Maximum           =0.1;      //EXIT Parabolic SAR(0.02,0.2) Maximum rate
 input double         Exit_Signal_SAR_Weight        =1.0;      //EXIT Parabolic SAR(0.02,0.2) EXITWeight [0...1.0]
 
-
-input int                Signal_EXIT_MA_PeriodMA    =12;          // Moving Average(12,0,...) Period of averaging
-input int                Signal_EXIT_MA_Shift       =0;           // Moving Average(12,0,...) Time shift
-input ENUM_MA_METHOD     Signal_EXIT_MA_Method      =MODE_SMA;    // Moving Average(12,0,...) Method of averaging
-input ENUM_APPLIED_PRICE Signal_EXIT_MA_Applied     =PRICE_CLOSE; // Moving Average(12,0,...) Prices series
-input double             Signal_EXIT_MA_Weight      =1.0;         // Moving Average(12,0,...) Weight [0...1.0]
-
-
-
 //--- inputs for trailing
-//input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
-//input double         Trailing_ParabolicSAR_Maximum=0.2;      // Maximum rate
+input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
+input double         Trailing_ParabolicSAR_Maximum=0.2;      // Maximum rate
 //--- inputs for money
 input double         Money_FixLot_Percent         =10.0;     // Percent
 input double         Money_FixLot_Lots            =0.1;      // Fixed volume
@@ -76,7 +67,11 @@ input double         Money_FixLot_Lots            =0.1;      // Fixed volume
 //+------------------------------------------------------------------+
 //| Global expert object                                             |
 //+------------------------------------------------------------------+
+#ifdef CEXPERT_CB
 CExpertCB ExtExpert;
+#else 
+CExpert ExtExpert;
+#endif
 //+------------------------------------------------------------------+
 //| Initialization function of the expert                            |
 //+------------------------------------------------------------------+
@@ -91,14 +86,18 @@ int OnInit()
       return(INIT_FAILED);
      }
    ExtExpert.MultiOrderMode(Expert_AllowMultiOrders);
-   ExtExpert.MaxOrders(Expert_MaxOrders);
+   ExtExpert.MaxPositions(Expert_MaxOrders);
    ExtExpert.MinBarDiff(Expert_MinBarDiff);
-   ExtExpert.VStopLevel(Signal_StopLevel);
-   ExtExpert.VTakeLevel(Signal_TakeLevel);
+   ExtExpert.StopLevel(Signal_StopLevel);
+   ExtExpert.TakeLevel(Signal_TakeLevel);
    ExtExpert.VDelay(Signal_VDelayMinutes);
    ExtExpert.VUse(Signal_VUse);
 //--- Creating signal
-   CExpertSignal *signal=new CExpertSignal;
+  #ifdef CEXPERT_CB
+CExpertSignalCB *signal=new CExpertSignalCB;
+#else 
+CExpertSignal *signal=new CExpertSignal;
+#endif
    if(signal==NULL)
      {
       //--- failed
@@ -109,16 +108,16 @@ int OnInit()
 //---
    ExtExpert.InitSignal(signal);
    signal.ThresholdOpen(Signal_ThresholdOpen);
-   signal.ThresholdClose(1000);
+   signal.ThresholdClose(Signal_ThresholdClose);
    signal.PriceLevel(Signal_PriceLevel);
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-   
-   
+  
+  
 //--- Creating filter CSignalSAR
-  //CSignalSARChange *filter0=new CSignalSARChange;
-   CSignalSAR *filter0=new CSignalSAR;
+  CSignalSARChange *filter0=new CSignalSARChange;
+  // CSignalSAR *filter0=new CSignalSAR;
    if(filter0==NULL)
      {
       //--- failed
@@ -150,40 +149,15 @@ int OnInit()
 
 //================================== EXIT SIGNAL ============================================
 //--- Creating exit_signal
-   CExpertSignal *exit_signal=new CExpertSignal;
-   if(signal==NULL)
+   CExpertSignalCB *exit_signal=new CExpertSignalCB;
+   if(exit_signal==NULL)
      {
       //--- failed
-      printf(__FUNCTION__+": error creating signal");
-      ExtExpert.Deinit();
-      return(INIT_FAILED);
-     }
-//---
-   ExtExpert.InitExitSignal(exit_signal);
-   exit_signal.ThresholdOpen(10);
-   exit_signal.ThresholdClose(200);
-   exit_signal.PriceLevel(0);
-   exit_signal.StopLevel(0);
-   exit_signal.TakeLevel(0);
-   exit_signal.Expiration(0);
-
-   CSignalMA *filterX=new CSignalMA;
-   if(filter1==NULL)
-     {
-      //--- failed
-      printf(__FUNCTION__+": error creating filter1");
+      printf(__FUNCTION__+": error creating exit_signal");
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
 
-   exit_signal.AddFilter(filter1);
-//--- Set filter parameters
-   filterX.PeriodMA(Signal_EXIT_MA_PeriodMA);
-   filterX.Shift(Signal_EXIT_MA_Shift);
-   filterX.Method(Signal_EXIT_MA_Method);
-   filterX.Applied(Signal_EXIT_MA_Applied);
-   filterX.Weight(Signal_EXIT_MA_Weight);
-   
    //--- Creating filter CSignalSAR FOR EXIT !!!!!
 //   CSignalSARChange *filter2=new CSignalSARChange;
     CSignalSAR *filter2=new CSignalSAR;
@@ -204,7 +178,7 @@ int OnInit()
 //==========================================================================================
 
 //--- Creation of trailing object   
-      CTrailingNone *trailing=new CTrailingNone;
+      CTrailingPSAR *trailing=new CTrailingPSAR;
    if(trailing==NULL)
      {
       //--- failed
@@ -220,9 +194,9 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
- //=======================================================================================
-
-   
+ //--- Set trailing parameters
+   trailing.Step(Trailing_ParabolicSAR_Step);
+   trailing.Maximum(Trailing_ParabolicSAR_Maximum);
 //--- Creation of money object
    CMoneyFixedLot *money=new CMoneyFixedLot;
    if(money==NULL)
@@ -258,7 +232,6 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
-    
 //--- ok
    return(INIT_SUCCEEDED);
   }

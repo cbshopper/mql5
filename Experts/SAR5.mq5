@@ -40,8 +40,8 @@ input int            Signal_STF_TrendPeriod       =50;       // SignalTrendFilte
 input int            Signal_STF_TrendMiniff       =0;        // SignalTrendFilter(50,...) Trend Period min.Diff
  double         Signal_STF_Weight            =1.0;      // SignalTrendFilter(50,...) Weight [0...1.0]
 //--- inputs for trailing
-input double         Trailing_ParabolicSAR_Step   =0.02;     // Speed increment
-input double         Trailing_ParabolicSAR_Maximum=0.2;      // Maximum rate
+input double         Trailing_ParabolicSAR_Step   =0.02;     // Trailing SAR Speed increment
+input double         Trailing_ParabolicSAR_Maximum=0.2;      // Trailing SAR Maximum rate
 //--- inputs for money
 input double         Money_FixLot_Percent         =10.0;     // Percent
 input double         Money_FixLot_Lots            =0.1;      // Fixed volume

@@ -11,7 +11,7 @@
 //+------------------------------------------------------------------+
 #include <Expert\Expert.mqh>
 //--- available signals
-#include <Expert\Signal\SignalHullMA2.mqh>
+#include <Expert\Signal\Signal2HullMA.mqh>
 #include <Expert\Signal\SignalITrendF.mqh>
 //--- available trailing
 #include <Expert\Trailing\TrailingMA.mqh>

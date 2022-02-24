@@ -65,6 +65,10 @@ int OnInit()
       ExtExpert.Deinit();
       return(INIT_FAILED);
      }
+  ExtExpert.StopLevel(Signal_StopLevel);
+   ExtExpert.TakeLevel(Signal_TakeLevel);
+   ExtExpert.VDelay(Signal_VDelayMinutes);
+   ExtExpert.VUse(Signal_VUse);
 //--- Creating signal
    CExpertSignalCB *signal=new CExpertSignalCB;
    if(signal==NULL)
@@ -82,13 +86,11 @@ int OnInit()
    signal.StopLevel(Signal_StopLevel);
    signal.TakeLevel(Signal_TakeLevel);
    signal.Expiration(Signal_Expiration);
-   ExtExpert.VStopLevel(Signal_StopLevel);
-   ExtExpert.VTakeLevel(Signal_TakeLevel);
-   ExtExpert.VDelay(Signal_VDelayMinutes);
-   ExtExpert.VUse(Signal_VUse);
+ 
    
 //--- Creating filter CSignalSAR
-   CSignalSAR *filter0=new CSignalSARChange;
+ CSignalSARChange *filter0=new CSignalSARChange;
+//   CSignalSAR *filter0=new CSignalSAR;
    if(filter0==NULL)
      {
       //--- failed

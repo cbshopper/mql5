@@ -15,7 +15,7 @@ input  string SIGNAL_Settings = "--------  SIGNAL Settings -------------";
 input  int BarRange=1;
 input  int MinSignalScore=1;
 input  string SIGSEL_Settings = "--------  SIGNAL Selection -------------";
-
+  int Signal1MATurn0;
   int Signal1MATurn=0;
   int SignalSAR=0;
   int Signal2MACross=0;
@@ -49,7 +49,7 @@ input int CloseByOpositeSignal=0;
 
 
 // #define TESTING
-//#include "common\CB_Commons.mqh"
+#include "common\CB_Commons.mqh"
 #include "signals\CB_uniSignal.mqh"
 #include "signals\CB_uniSignalLib.mqh"
 #include "common\CB_uniFilter1.mqh"

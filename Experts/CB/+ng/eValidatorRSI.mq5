@@ -11,14 +11,14 @@
 //#define TESTING
 #define EXPERT
 input  string SPEZIFIC = "--------  EA Settings -------------";
-input int    MagicNumber = 220218;
+input int MagicNumber = 220218;
 input int    TrailingStop = 0;
 input int    StopLoss = 0;
 input int    TakeProfit = 0;
 input int    MaxBuyOrder = 1;
 input int    MaxSellOrder = 1;
 
-#include "signals/Validator.mqh"
+#include "signals/ValidatorRSI.mqh"
 
 ENUM_TIMEFRAMES      period = PERIOD_CURRENT;      // timeframe
 
@@ -37,14 +37,14 @@ int Expert_OnInit(CcbExpert *expert)
    indicator = new CValidator();
    indicator.Init();
    expert.SetMaxSpread(100);
- //  expert.SetStartShift(1);
+//  expert.SetStartShift(1);
 //  expert.SetStopLossTicks(StopLoss);
    expert.SetMaxBuyPositions(MaxBuyOrder);
    expert.SetMaxSellPositions(MaxSellOrder);
    expert.SetMaxBuyOrders(MaxBuyOrder);
    expert.SetMaxSellOrders(MaxSellOrder);
    expert.SetPendingOrderExpireBarCount(100);
-  // expert.SetEtheryTick(false);
+// expert.SetEtheryTick(false);
    cbexpert = expert;
    return INIT_SUCCEEDED;
   }

@@ -27,6 +27,10 @@
 #include <CB/CB_Drawing.mqh>
 input int ValidateTimeDays = 30;
 input int Offset = 1;
+input int Stoploss = 0;
+input int Takeprofit = 0;
+input int OrderLineWidth =1;
+
 
 
 double         SellSignalOpenBuffer[];
@@ -38,6 +42,7 @@ int total_pips = 0;
 int total_tradecount = 0;
 int total_wincnt = 0, total_losscnt = 0;
 string         Program = "VALIDATOR";
+int StartOffset=Offset;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
@@ -81,6 +86,8 @@ int InitSignalBuffers()
    total_tradecount = 0;
    total_wincnt = 0;
    total_losscnt = 0;
+   
+   StartOffset=Offset;
    return(buffercount);
   }
 
@@ -93,28 +100,24 @@ int InitSignalBuffers()
 //+------------------------------------------------------------------+
 void DrawOrderLines()
   {
-  
    total_win = 0;
    total_pips = 0;
    total_tradecount = 0;
    total_wincnt = 0;
    total_losscnt = 0;
    int startshift = 0;
-   
    if(ValidateTimeDays > 0)
      {
-       startshift = ValidateTimeDays * 24 * 60 * 60 / PeriodSeconds();
+      startshift = ValidateTimeDays * 24 * 60 * 60 / PeriodSeconds();
      }
-     else
+   else
      {
-        return;
+      return;
      }
-   
    if(startshift > ArraySize(BuySignalOpenBuffer))
      {
       startshift = ArraySize(BuySignalOpenBuffer) - 1;
      }
-     
    for(int shift = startshift; shift > 0; shift--)
      {
       if(BuySignalOpenBuffer[shift] != EMPTY_VALUE)
@@ -156,10 +159,43 @@ void DrawOrderLines()
 //+------------------------------------------------------------------+
 void FindClose(int shift, double &valArr[], int signal)
   {
-   int startbar = shift - Offset;
-   for(int i = shift ; i > 0; i --)
+   double price = 0;
+   int startbar = shift - StartOffset;
+   double price_open = iOpen(NULL, 0, startbar);
+   for(int i = startbar-1 ; i > 0; i --)
      {
-      if(valArr[i] != EMPTY_VALUE) // || i == 0)
+ 
+      if(Stoploss > 0 || Takeprofit > 0)
+        {
+         double win =  0;
+         price = iOpen( NULL,0,i);
+         if(signal > 0)
+           {
+            win = price - price_open;
+           }
+         else
+           {
+            win = price_open - price;
+           }
+         int wintPts =MathAbs( win / Point());
+         if(Stoploss > 0 && win < 0)  //SL
+           {
+            if(wintPts > Stoploss)
+              {
+               DrawLine(signal, startbar, i);
+               break;
+              }
+           }
+         if(Takeprofit > 0 && win > 0)
+           {
+            if(wintPts > Stoploss)
+              {
+               DrawLine(signal, startbar, i);
+               break;
+              }
+           }
+        }
+          if(valArr[i] != EMPTY_VALUE) // || i == 0)
         {
          DrawLine(signal, startbar, i);
          break;
@@ -173,11 +209,11 @@ void DrawLine(int signal,  int startbar, int stopbar)
   {
    double winval = 0;
    int pips = 0;
-   stopbar = stopbar - Offset;
+   stopbar = stopbar - StartOffset;
    if(stopbar  <= 0)
       stopbar = 1;
-   pips = CalcOrderResultValues(startbar, stopbar, signal, winval);
-   DrawOrderLine(startbar, stopbar, pips, winval, 0, 3);
+   pips = CalcOrderResultValues(startbar, stopbar, signal,Stoploss,Takeprofit, winval);
+   DrawOrderLine(startbar, stopbar, pips, winval, 0, OrderLineWidth);
    total_win += winval;
    total_pips += pips;
    if(winval > 0)

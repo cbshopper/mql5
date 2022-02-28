@@ -89,7 +89,7 @@ string TLine(int index, string text, string postfix, datetime T0, double P0, dat
   }
 
 //+------------------------------------------------------------------+
-string  DrawOrderLine(int startbar, int stopbar, int signal, int offset = 0, int width=3)
+string  DrawOrderLine(int startbar, int stopbar, int signal, int offset = 0, int width=3, int sl=0, int tp=0)
   {
    string ret = "";
    double winval = 0;
@@ -98,7 +98,7 @@ string  DrawOrderLine(int startbar, int stopbar, int signal, int offset = 0, int
      {
       color clr = clrGreen;
       string prefix = "WIN!";
-      int pips = CalcOrderResultValues(startbar,stopbar,signal,winval);
+      int pips = CalcOrderResultValues(startbar,stopbar,signal,sl,tp,winval);
       /*
       if(signal == 1)
         {
@@ -123,7 +123,7 @@ string  DrawOrderLine(int startbar, int stopbar, int signal, int offset = 0, int
         {
          clr = clrRed;
          prefix = "LOST!";
-         width += 1;
+        // width += 1;
         }
       
       string name = StringFormat("%s to %s \nPips=%d\nVal=%f\n(%s) ", TimeToString(iTime(NULL, 0, startbar)), TimeToString(iTime(NULL, 0, stopbar)), pips, winval, prefix);
@@ -145,7 +145,7 @@ string  DrawOrderLine(int startbar, int stopbar, int pips, double winval, int of
         {
          clr = clrRed;
          prefix = "LOST!";
-         width += 1;
+      //   width += 1;
         }
       
       string name = StringFormat("%s to %s \nPips=%d\nVal=%f\n(%s) ", TimeToString(iTime(NULL, 0, startbar)), TimeToString(iTime(NULL, 0, stopbar)), pips, winval, prefix);

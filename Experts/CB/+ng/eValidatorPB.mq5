@@ -11,14 +11,14 @@
 //#define TESTING
 #define EXPERT
 input  string SPEZIFIC = "--------  EA Settings -------------";
-input int    MagicNumber = 220218;
+input int MagicNumber = 220218;
 input int    TrailingStop = 0;
 input int    StopLoss = 0;
 input int    TakeProfit = 0;
 input int    MaxBuyOrder = 1;
 input int    MaxSellOrder = 1;
 
-#include "signals/Validator.mqh"
+#include "signals/ValidatorPB.mqh"
 
 ENUM_TIMEFRAMES      period = PERIOD_CURRENT;      // timeframe
 
@@ -37,14 +37,14 @@ int Expert_OnInit(CcbExpert *expert)
    indicator = new CValidator();
    indicator.Init();
    expert.SetMaxSpread(100);
- //  expert.SetStartShift(1);
+//  expert.SetStartShift(1);
 //  expert.SetStopLossTicks(StopLoss);
    expert.SetMaxBuyPositions(MaxBuyOrder);
    expert.SetMaxSellPositions(MaxSellOrder);
    expert.SetMaxBuyOrders(MaxBuyOrder);
    expert.SetMaxSellOrders(MaxSellOrder);
    expert.SetPendingOrderExpireBarCount(100);
-  // expert.SetEtheryTick(false);
+// expert.SetEtheryTick(false);
    cbexpert = expert;
    return INIT_SUCCEEDED;
   }
@@ -65,7 +65,7 @@ int GetOpenSignal(int shift)
  
    buy0 = EmptyToZero2(buy0);
    sell0 = EmptyToZero2(sell0);
-   Print(__FUNCTION__, TimeAsString(shift), "  buy0=",buy0," sell0=",sell0);
+  // Print(__FUNCTION__, TimeAsString(shift), "  buy0=",buy0," sell0=",sell0);
    if(buy0 > 0)
      {
       enable_buy = true;
@@ -98,7 +98,7 @@ int GetOpenSignal(int shift)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int GetCloseSignal(int shift, int mode,  int ticket) 
+int GetCloseSignalORG(int shift, int mode,  int ticket) 
   {
 
    if(TrailingStop > 0)
@@ -110,11 +110,10 @@ int GetCloseSignal(int shift, int mode,  int ticket)
    DrawDot("CBUY",shift,cbuy+10*Point(),clrWhite,120);
    DrawDot("CSELL",shift,csell+100*Point(),clrYellow,120);
    
-
    
    cbuy = EmptyToZero2(cbuy);
    csell = EmptyToZero2(csell);
-   Print(__FUNCTION__, TimeAsString(shift), "  cbuy=",cbuy," csell=",csell);
+ //  Print(__FUNCTION__, TimeAsString(shift), "  cbuy=",cbuy," csell=",csell);
    
    if(mode == OP_SELL && csell > 0)
      {
@@ -128,3 +127,15 @@ int GetCloseSignal(int shift, int mode,  int ticket)
    return ret;
   }
 //+------------------------------------------------------------------+
+int GetCloseSignal(int shift, int mode,  int ticket) 
+  {
+
+   if(TrailingStop > 0)
+      cbexpert.SetTrailingStop(TrailingStop);
+// return 0;  ///// AUS!!!-----------------------------------------------------
+   int ret = 0;
+   datetime opentime = cbexpert.OrderMachine.PositionOpenTime(ticket);
+   int openbar = iBarShift(NULL,0,opentime,true);
+   if (openbar - shift+1 >= OrderBarCount) ret=1;
+    return ret;
+  }

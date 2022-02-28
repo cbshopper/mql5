@@ -213,6 +213,23 @@ public:
            }
         }
      }
+   //+------------------------------------------------------------------+
+   //| Refreshes the symbol quotes data                                 |
+   //+------------------------------------------------------------------+
+   bool              RefreshRates(void)
+     {
+      //--- refresh rates
+      if(!m_symbol.RefreshRates())
+        {
+         Print("RefreshRates error");
+         return(false);
+        }
+      //--- protection against the return value of "zero"
+      if(m_symbol.Ask() == 0 || m_symbol.Bid() == 0)
+         return(false);
+      //---
+      return(true);
+     }
    //--------------------------------------------------------------------------------
 protected:
    bool              InitCheckParameters(const int digits_adjust);

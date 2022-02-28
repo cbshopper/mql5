@@ -27,7 +27,7 @@ public:
 
    bool              Init()
      {
-      data_ptr = iCustom(NULL, PERIOD_CURRENT, "CB/ma/CB_HullSignalValidator", HMAPeriod,/* HMAShift,*/ HMAPrice, Divisor, Filter, Color, ColorBarBack, ValidateTimeDays,1);
+      data_ptr = iCustom(NULL, PERIOD_CURRENT, "CB/Validators/CB_HullSignalValidator", HMAPeriod,/* HMAShift,*/ HMAPrice, Divisor, Filter, Color, ColorBarBack, ValidateTimeDays,1);
       Print(__FUNCTION__, ": data_ptr=", data_ptr);
    //   return (data_ptr > 0);
       if(data_ptr > 0)

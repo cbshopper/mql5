@@ -116,6 +116,9 @@ int OnCalculate(const int rates_total,
                 const int &spread[])
   {
 //---
+   ArraySetAsSeries(open,true);
+   ArraySetAsSeries(close,true);
+   
    int calculated = BarsCalculated(ma1_ptr);
    if(calculated < rates_total)
      {
@@ -158,14 +161,35 @@ int OnCalculate(const int rates_total,
       SellSignalOpenBuffer[shift] = EMPTY_VALUE;
       BuySignalCloseBuffer[shift] = EMPTY_VALUE;
       SellSignalCloseBuffer[shift] = EMPTY_VALUE;
-      if(MA1Values[shift] > MA2Values[shift] && MA1Values[shift + 1] < MA2Values[shift + 1])
+  
+    
+      if (MA1Values[shift] > MA2Values[shift] && MA1Values[shift+1] > MA2Values[shift+1] )   //trend up
+      {
+           if (open[shift] < MA1Values[shift] && close[shift] > MA1Values[shift] )
+         {
+          BuySignalOpenBuffer[shift] = open[shift];
+         }
+      }
+       if (MA1Values[shift] < MA2Values[shift] && MA1Values[shift+1] < MA2Values[shift+1] )   //trend dn
+      {
+         if (open[shift] > MA1Values[shift] && close[shift] < MA1Values[shift] )
+         {
+          SellSignalOpenBuffer[shift] = open[shift];
+         }
+      }
+     
+      
+      if(MA1Values[shift] > MA2Values[shift] && MA1Values[shift + 1] < MA2Values[shift + 1])  // BUY 
         {
-         BuySignalOpenBuffer[shift] = iOpen(NULL, 0, shift);
+         BuySignalOpenBuffer[shift] = open[shift];  // iOpen(NULL, 0, shift);;
+         SellSignalCloseBuffer[shift] =open[shift];
         }
       if(MA1Values[shift] < MA2Values[shift] && MA1Values[shift + 1] > MA2Values[shift + 1])
         {
-         SellSignalOpenBuffer[shift] = iOpen(NULL, 0, shift);
+         SellSignalOpenBuffer[shift] = open[shift];  //iOpen(NULL, 0, shift);;
+          BuySignalCloseBuffer[shift] = open[shift];
         }
+        /*
       if(MA1Values[shift] > MA2Values[shift] && MA1Values[shift + 1] < MA2Values[shift + 1])
         {
          SellSignalCloseBuffer[shift] = iOpen(NULL, 0, shift);
@@ -174,6 +198,7 @@ int OnCalculate(const int rates_total,
         {
          BuySignalCloseBuffer[shift] = iOpen(NULL, 0, shift);
         }
+        */
      }
    DrawOrderLines();
 //--- return value of prev_calculated for next call

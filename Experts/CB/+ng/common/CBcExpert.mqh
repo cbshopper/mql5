@@ -349,7 +349,8 @@ void CcbExpert::Trade()
 #endif
    if(isnewbar)
      {
-  //    Print(__FUNCSIG__,": CHECKFORCLOSE___________________");
+      OrderMachine.RefreshRates();
+ //    Print(__FUNCTION__," ", TimeAsString(shift));
       changed = CheckForClose(shift);
       if(changed)
         {
@@ -357,12 +358,10 @@ void CcbExpert::Trade()
         }
       if(CheckPreConditions())
         {
-   //     Print(__FUNCSIG__,": CheckPreConditions _________________________");  
          if(AccountBalanceBeforeLoss < AccountInfoDouble(ACCOUNT_BALANCE))
            {
             AccountBalanceBeforeLoss = AccountInfoDouble(ACCOUNT_BALANCE);
            }
-    //     Print(__FUNCSIG__,": CHECKFOROPEN___________________");  
          changed = CheckForOpen(shift);
          if(changed)
            {
@@ -787,7 +786,3 @@ double CcbExpert::ND(double val)
   {
    return(NormalizeDouble(val, Digits()));
   }
-//+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+

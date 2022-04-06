@@ -8,7 +8,7 @@
 
 
 #property indicator_buffers       2
-#property indicator_plots         2
+#property indicator_plots         1
 #property indicator_type1         DRAW_HISTOGRAM
 #property indicator_color1        clrRed
 #property indicator_type2         DRAW_HISTOGRAM
@@ -20,6 +20,7 @@
 
 // input Values------------------------------
 input int  Range = 20;
+input bool UseOC = false;
 
 // global global Vars
 
@@ -82,10 +83,23 @@ int OnCalculate(const int rates_total,
       limit = min_rates_total;
    if(IsStopped())
       return 0;
+      
+    double barsize=0;   
    for(int shift = limit; shift >= 0 ; shift--)
      {
-      double sumrange = calculateRange(shift + 1,  high, low);
-      double barsize = high[shift] - low[shift];
+      double sumrange = 0;
+      if (UseOC)
+      {
+         sumrange = calculateRange(shift + 1,  close, open);
+         barsize = MathAbs(close[shift] - open [shift]);
+      }
+      else
+      {
+         sumrange = calculateRange(shift + 1,  high, low);
+         barsize = high[shift] - low[shift];
+      }
+         
+     
       sumrange /= Point();
       barsize /= Point();
       if(sumrange > 0)
@@ -96,6 +110,8 @@ int OnCalculate(const int rates_total,
         {
          PCValue[shift] = 0;
         }
+        
+ /*       
       sumrange = calculateRange(shift + 1, close, open);
       barsize = close[shift] - open [shift];
       sumrange /= Point();
@@ -108,6 +124,8 @@ int OnCalculate(const int rates_total,
         {
          PCValue2[shift] = 0;
         }  
+        
+        */
      }
 //--- return value of prev_calculated for next call
    return(rates_total);

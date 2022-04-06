@@ -6,10 +6,19 @@
 #include <cb\CB_IndicatorHelper.mqh>
 
 input string INDICATOR_PARAMETR = "------- Indicator Parameter --------";
-input int                 PBRange = 20;
-input double              LevelInvert = 5.0;
-input double              LevelFollow = 2.5;
-input int                 OrderBarCount = 4;
+input int                 bb_period = 20;
+input int                 bb_shift = 0;
+input double              bb_deviation = 1.5;
+input int                  ma_period=20;
+input ENUM_TIMEFRAMES     ma_timeframe=PERIOD_D1;
+input int                 rsi_period = 14;
+input int                 rsi_buylevel = 30;
+input int                 rsi_selllevel = 70;
+
+ int                 PBRange = 20;
+ bool                UseOC = false;
+ double              PBLevel = 3.0;
+ int                 OrderBarCount = 4;
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -24,7 +33,7 @@ public:
 
    bool              Init()
      {
-      data_ptr = iCustom(NULL, PERIOD_CURRENT, "CB/Validators/CB_PBValidator", PBRange, LevelInvert, LevelFollow, OrderBarCount, /* canstants for drawing orderlines */ 30,1,0,0,1);
+      data_ptr = iCustom(NULL, PERIOD_CURRENT, "CB/Validators/CB_PBValidator", bb_period,bb_shift,bb_deviation,ma_period,ma_timeframe,rsi_period,rsi_buylevel,rsi_selllevel,PBRange, UseOC, PBLevel, OrderBarCount, /* canstants for drawing orderlines */ 0,1,0,0,1);
       Print(__FUNCTION__, ": data_ptr=", data_ptr);
    //   return (data_ptr > 0);
       if(data_ptr > 0)

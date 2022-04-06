@@ -566,26 +566,32 @@ bool COrderMachine::PositionModify(
    if(m_position.SelectByTicket(ticket))
      {
       price = PositionGetDouble(POSITION_PRICE_CURRENT);
+      double openprice = PositionGetDouble(POSITION_PRICE_OPEN);
+      double stopprice=price;
+      double takeprice=price;
       ENUM_POSITION_TYPE type = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
       if(type == POSITION_TYPE_BUY)
         {
+         if (price < openprice) takeprice = openprice;
+        
          if(sl > 0)
-            stoploss = price - sl * Point();
+            stoploss = stopprice - sl * Point();
          else
             stoploss = PositionGetDouble(POSITION_SL);
          if(tp > 0)
-            takeprofit = price + tp * Point();
+            takeprofit = takeprice + tp * Point();
          else
             takeprofit = PositionGetDouble(POSITION_TP);
         }
       else
         {
+         if (price > openprice) takeprice=openprice;
          if(sl > 0)
-            stoploss = price + sl * Point();
+            stoploss = stopprice + sl * Point();
          else
             stoploss = PositionGetDouble(POSITION_SL);
          if(tp > 0)
-            takeprofit = price - tp * Point();
+            takeprofit = takeprice - tp * Point();
          else
             takeprofit = PositionGetDouble(POSITION_TP);
         }

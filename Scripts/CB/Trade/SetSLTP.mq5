@@ -16,9 +16,8 @@
 void OnStart()
   {
 //---
-  StartDateTime=0;
-   OnlyPendingOrder=false;
-   DoMyJob();
+ 
+   DoMyJob(true, false,0);
   
    
   }

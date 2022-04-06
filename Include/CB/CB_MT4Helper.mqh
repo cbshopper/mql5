@@ -48,7 +48,7 @@
 #define MODE_FREEZELEVEL 33
 
 
-int Bars() {return Bars(_Symbol, _Period);}
+int Bars() {return Bars(Symbol(), _Period);}
 
 
 //+------------------------------------------------------------------+
@@ -58,7 +58,10 @@ double Ask()
   {
    MqlTick last_tick;
    SymbolInfoTick(_Symbol, last_tick);
-   return last_tick.ask;
+  // return last_tick.ask;
+  double p  = SymbolInfoDouble(Symbol(),SYMBOL_ASK);
+//  Print(__FUNCTION__,": Symbol=", Symbol(), " ask=",p);
+   return p;
   }
 
 //+------------------------------------------------------------------+
@@ -68,7 +71,8 @@ double Bid()
   {
    MqlTick last_tick;
    SymbolInfoTick(_Symbol, last_tick);
-   return last_tick.bid;
+  // return last_tick.bid;
+   return SymbolInfoDouble(Symbol(),SYMBOL_BID);
   }
 
 //+------------------------------------------------------------------+

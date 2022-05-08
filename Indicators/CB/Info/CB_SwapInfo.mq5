@@ -16,12 +16,12 @@ input string format_buy = "Buy:%2.2f";
 input string format_sell = "Sell:%2.2f";
 
 input color  Text_Color = clrBlack; // Text Color
-input int    Text_Size = 10; // Text Size
+input int    Text_Size = 7; // Text Size
 input string Text_Font = "Verdana"; // Text Type
 input int    Corner_ = 0; // Corner
 input int    Left_Right = 20; // Left - Right
 input int    Up_Down = 50; // Up - Dowm
-input int    DOTSIZE = 30;
+input int    DOTSIZE = 20;
 input int    XDIFF=30;
 
 string symbol_basename = "INFO";

@@ -18,7 +18,9 @@ void OnStart()
    bool close_me = false;
    long  CID = ChartID();
    string list[];
+   
    OpenSymbols(list);
+   
    long  ID = ChartFirst();
    ENUM_TIMEFRAMES tf = ChartPeriod(CID);
    while(ID != -1)
@@ -26,7 +28,6 @@ void OnStart()
       string sym = ChartSymbol(ID);
       ENUM_TIMEFRAMES tf = ChartPeriod();
       bool match = IsInList(sym, list);
-
       if(!match)
         {
          if(ID != CID)
@@ -35,11 +36,10 @@ void OnStart()
             ok = ChartClose(ID);
             if(!ok)
               {
-               Alert("Failed to close Chart ID: "+ ID+ "\nerror code: "+ GetLastError());
+               Alert("Failed to close Chart ID: " + ID + "\nerror code: " + GetLastError());
                break;
               }
            }
-
          else
            {
             close_me = true;
@@ -47,14 +47,11 @@ void OnStart()
         }
       ID = ChartNext(ID);
      }
-
-
-
 // next: open Charts
    for(int i  = 0; i < ArraySize(list); i++)
      {
-      bool match=false;
-      string sym="";
+      bool match = false;
+      string sym = "";
       long  ID = ChartFirst();
       while(ID != -1)
         {
@@ -66,10 +63,9 @@ void OnStart()
         }
       if(!match)
         {
-         ChartOpen(list[i],tf);
+         ChartOpen(list[i], tf);
         }
      }
-
 // last: close current if match
    if(close_me)
      {
@@ -87,33 +83,32 @@ void OnStart()
 //+------------------------------------------------------------------+
 int OpenSymbols(string &list[])
   {
+   int asize = 0;
    int cnt = OrdersTotal();
-   int asize =0;
-   ArrayResize(list, asize);
-   for(int i = 0; i < OrdersTotal(); i++)
+   for(int i = 0; i < cnt; i++)
      {
       //---
-      if(OrderSelect(i))
+      int ticket = OrderGetTicket(i);
+      if(ticket > 0)
         {
-         string sym = OrderGetString(ORDER_SYMBOL); //OrderSymbol();
-         bool found = false;
-         asize = ArraySize(list);
-         for(int i = 0; i < asize; i++)
+         if(OrderSelect(ticket))
            {
-            if(list[i] == sym)
-              {
-               found =true;
-               break;
-              }
-           }
-         if(!found)
-           {
-            asize++;
-            ArrayResize(list,asize);
-            list[asize-1]=sym;
+            string sym = OrderGetString(ORDER_SYMBOL); //OrderSymbol();
+            asize = OpenChart(sym, list);
            }
         }
      }
+   cnt = PositionsTotal();
+   for(int i = 0; i < cnt; i++)
+     {
+      //---
+      string sym = PositionGetSymbol(i);
+      if(sym != "")
+        {
+         asize = OpenChart(sym, list);
+        }
+     }
+   asize = ArraySize(list);
    return asize;
   }
 //+------------------------------------------------------------------+
@@ -127,5 +122,28 @@ bool IsInList(string sym, string &list[])
          return true;
      }
    return false;
+  }
+//+------------------------------------------------------------------+
+int  OpenChart(string sym, string &list[])
+  {
+   int asize = 0;
+   bool found = false;
+   asize = ArraySize(list);
+   for(int i = 0; i < asize; i++)
+     {
+      if(list[i] == sym)
+        {
+         found = true;
+         break;
+        }
+     }
+   if(!found)
+     {
+      asize++;
+      ArrayResize(list, asize);
+      list[asize - 1] = sym;
+     }
+   asize = ArraySize(list);
+   return asize;
   }
 //+------------------------------------------------------------------+

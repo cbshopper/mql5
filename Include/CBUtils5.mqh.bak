@@ -25,13 +25,13 @@
 //   string ErrorDescription(int error_code);
 // #import
 //+------------------------------------------------------------------+
-double GetIndicatorValue(int handle,int buffer, int index)
+double GetIndicatorValue(handle indi, int index)
 {
-   double ret = 0;
-   double vals[1];
-   if (CopyBuffer(handle, buffer, index, 1, vals) > -1)
-      {
-         ret = vals[0];
-      }
-   return ret;
+double ret =0;
+  double vals[1];
+  if (CopyBuffer(handle,0,index,1,vals) > -1)
+  {
+    ret = vals[0];
+  }
+  return ret;
 }

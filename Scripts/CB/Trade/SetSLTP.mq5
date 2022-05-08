@@ -17,7 +17,9 @@ void OnStart()
   {
 //---
  
-   DoMyJob(true, false,0);
+  // DoMyJob(true, false,0);
+   DoMyJob(CheckPositions, CheckOrders, 0);
+
   
    
   }

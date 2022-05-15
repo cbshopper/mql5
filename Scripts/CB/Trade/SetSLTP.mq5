@@ -14,13 +14,14 @@
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
 void OnStart()
-  {
+ {
 //---
- 
-  // DoMyJob(true, false,0);
-   DoMyJob(CheckPositions, CheckOrders, 0);
-
-  
-   
-  }
+  if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
+   {
+    Alert("Autotrade is NOT allowed.");
+    return;
+   }
+// DoMyJob(true, false,0);
+  DoMyJob(CheckPositions, CheckOrders, 0);
+ }
 //+------------------------------------------------------------------+

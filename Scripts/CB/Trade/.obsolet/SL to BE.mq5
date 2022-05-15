@@ -2,6 +2,8 @@
 extern int           MagicNumber =0;
 extern double       WHENTOMOVETOBE = 10;    //When to move break even
 extern double       PIPSTOMOVESL = 10;      //How much PIPS() to move sl
+#include <cb\CB_OrderMachine.mqh>
+
 #include <cb\CB_Commons.mqh>
 #property script_show_inputs
 
@@ -10,7 +12,10 @@ extern double       PIPSTOMOVESL = 10;      //How much PIPS() to move sl
 //+------------------------------------------------------------------+
 int OnStart()
   {
-     OrderMachine.OrderSetStop(MagicNumber,PIPSTOMOVESL,WHENTOMOVETOBE);
+     COrderMachine OM;
+     OM.Init();
+     OM.OrderSetStop(MagicNumber,PIPSTOMOVESL,WHENTOMOVETOBE);
+     OM.Deinit();
      return 0;
   }
 

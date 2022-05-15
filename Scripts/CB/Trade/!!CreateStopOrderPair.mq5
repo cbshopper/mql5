@@ -5,8 +5,7 @@
 //+------------------------------------------------------------------+
 #property script_show_inputs
 
-#include <cb\CB_Pips&Lots.mqh>
-#include <cb\CB_OrderFunctions.mqh>
+#include <cb\CB_OrderMachine.mqh>
 
 
 extern  string comment="";
@@ -17,10 +16,13 @@ extern double CRV=2;
 extern double Budget=10000;
 extern int Slippage = 3;
 extern int magicnumber=0;
+
+
+
 int CalculateDiff()
 {
   int diff =Diff;
-  int digits = Digits;
+  int digits = Digits();
   switch (digits)
   {
      case 0: diff*=1; break;
@@ -36,12 +38,16 @@ int CalculateDiff()
 //+------------------------------------------------------------------+
 int OnStart()
   {
-  
+   if(!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED))
+   {
+    Alert("Autotrade is NOT allowed.");
+    return 0;
+   }
   
    double minlots = MarketInfo(NULL,MODE_MINLOT);
    if(Lots < minlots)
       Lots = minlots;
-   double realbudget = MathMin(AccountBalance(),AccountEquity());   
+   double realbudget = MathMin(AccountInfoDouble(ACCOUNT_BALANCE),AccountInfoDouble(ACCOUNT_EQUITY));   
    if(Budget == 0 || Budget > realbudget)
       Budget = realbudget;
       
@@ -68,24 +74,24 @@ int OnStart()
    double openprice=0;
    double SLVal=0,TPVal=0;
 // open Buystop Order
-   price=Ask ;
+   price=Ask();
    openprice=NormalizeDouble(price+Diff*Point(),3);
    if(SL > 0)
       SLVal =  NormalizeDouble(openprice-(SL+SPREAD)*Point(),3);
    if(TP > 0)
       TPVal =  NormalizeDouble(openprice+(TP+SPREAD)*Point(),3);
-   int ticket = OpenOrder(OP_BUYSTOP,openprice,SLVal,TPVal);
+   int ticket = OpenOrder(ORDER_TYPE_BUY_STOP,openprice,SLVal,TPVal);
 
    if(ticket > 0)
      {
       // open Sellstop Order
-      price=Bid ;
+      price=Bid() ;
       openprice=NormalizeDouble(price-Diff*Point(),3);
       if(SL > 0)
          SLVal =  NormalizeDouble(openprice+(SL+SPREAD)*Point(),3);
       if(TP > 0)
          TPVal =  NormalizeDouble(openprice-TP*Point(),3);
-      OpenOrder(OP_SELLSTOP,openprice,SLVal,TPVal);
+      OpenOrder(ORDER_TYPE_SELL_STOP,openprice,SLVal,TPVal);
 
      }
 //----
@@ -100,32 +106,35 @@ int OnStart()
 //+------------------------------------------------------------------+
 int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
   {
+    COrderMachine OM ;
+   OM.Init();
    string info =  ordermode+ " Lots=" + Lots +" Price=" + openprice +" SL=" + SLVal + " TP=" +TPVal;
    Print(__FUNCTION__," Open Order mode=" + info);
-   int ticket=OrderMachine.OrderSend(Symbol(),
+   int ticket=OM.OrderSend(Symbol(),
                         ordermode,
                         Lots,
                         openprice,
                         Slippage,
-                        0,
-                        0,
+                        SLVal,
+                        TPVal,
                         comment,
                         magicnumber,
-                        0,
-                        clrBlack);
+                        0);
 
    if(ticket<1)
      {
+      int err = GetLastError();
       PrintError(" Open Order mode=" + info);
      }
    else
      {
       if(OrderSelect(ticket))
         {
-         double price = OrderOpenPrice(ticket);
-         bool ok = OrderModify(ticket,price,SLVal,TPVal,0,clrBlack);
+         double price = OrderGetDouble(ORDER_PRICE_OPEN);
+         bool ok = OM.PositionModify(ticket,SLVal,TPVal);
          if(ok)
-            OrderPrint();
+         {}
+           // OrderPrint();
          else
            {
             PrintError(" Change Order mode=" + info);
@@ -138,6 +147,8 @@ int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
          PrintError(" Select Order mode=" + info);
         }
      }
+     OM.Deinit();
+   
    return ticket;
   }
 //+------------------------------------------------------------------+

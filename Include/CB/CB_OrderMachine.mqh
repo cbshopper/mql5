@@ -765,7 +765,13 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
          //const string symbol,const ENUM_ORDER_TYPE order_type,const double volume,const double limit_price,
          //                const double price,const double sl,const double tp,
          //                 ENUM_ORDER_TYPE_TIME type_time,const datetime expiration,const string comment
-         if(m_trade.OrderOpen(Symbol(), (ENUM_ORDER_TYPE)cmd, volume, price, price, stoploss, takeprofit, ORDER_TIME_SPECIFIED, expiration, comment))
+         ENUM_ORDER_TYPE_TIME type_time = ORDER_TIME_SPECIFIED;
+         if (expiration == 0)
+         {
+           type_time = ORDER_TIME_GTC;
+         }
+         
+         if(m_trade.OrderOpen(Symbol(), (ENUM_ORDER_TYPE)cmd, volume, price, price, stoploss, takeprofit, type_time, expiration, comment))
            {
             printf("Position by %s to be opened", Symbol());
             res = true;

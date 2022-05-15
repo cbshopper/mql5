@@ -12,7 +12,7 @@
 
 //#property indicator_separate_window
 #include <cb\CB_Commons.mqh>
-//#include <cb\CB_MT4.mqh>
+#include <cb\CB_Pips&Lots.mqh>
 #include <cb\CB_objecthelper.mqh>
 
 #define WINDOW_MAIN 0
@@ -235,10 +235,10 @@ void InfoText(string name, string text)
   {
    if(ObjectFind(WINDOW_MAIN, name) < 0)
       ObjectCreate(WINDOW_MAIN, name, OBJ_LABEL, WINDOW_MAIN, 0, 0);
-   ObjectSetText(WINDOW_MAIN, name, text, 10, "Verdana", clrBlack);
+   ObjectSetText(WINDOW_MAIN, name, text, 7, "Consolas", clrBlack);
    ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_ANCHOR, ANCHOR_RIGHT);
    ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_CORNER, CORNER_RIGHT_UPPER);
-   ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_XDISTANCE, 20);
+   ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_XDISTANCE, 50);
    ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_YDISTANCE, 20);
    ObjectSetString(WINDOW_MAIN, name, OBJPROP_TOOLTIP, text);
   }
@@ -327,8 +327,10 @@ void UpdateLines()
 // string msg = StringFormat("Lots: %2.2f SLPips=%2.2f, Riskvalue=%2.2f, PT=%.5f, TV=%f ",Lots, SLPips,riskvalue,POINT,TickValue);
 //   string msg = StringFormat("%s:Lots=%2.2f[%2.2f](%1.2f)@%2.5f SL:%2.2f(%d) TP:%2.2f R:%1.1f%%(%1.1f)(%2.2f)",
 //                             OrderTypeString(Mode, true), Lots, lots_calculated, SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP), Price, SLValue, SLPips, TPValue, Risk, riskvalue, CRV);
-   string msg = StringFormat("Order %s:Lots=%2.2f Price:%2.5f SL:%2.2f(%d) TP:%2.2f R:%1.1f%%(%1.1f)(%2.2f)             ",
+   string msg = StringFormat("O=%s L=%2.2f P=%2.5f SL=%2.2f(%d) TP=%2.2f R=%1.1f%%(%1.1f) CRV=%2.2f ",
                              OrderTypeString(Mode, true), Lots,  Price, SLValue, SLPips, TPValue, Risk, riskvalue, CRV);
+                             
+                   
    InfoText(OBJ_TEXT, msg);
 //  GlobalVariableSet(GlobVarName,SLValue);
    if(ShowAskLine)

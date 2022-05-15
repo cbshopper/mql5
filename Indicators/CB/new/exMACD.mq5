@@ -142,6 +142,7 @@ int OnCalculate(const int rates_total,
     start = 0;
   else
     start = prev_calculated - 1;
+    start=0;
 //--- calculate MACD
   for(int i = start; i < rates_total-1 && !IsStopped(); i++)
    {

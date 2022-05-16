@@ -66,7 +66,7 @@ void DrawArrow(string name, int shift, double price, int mode, color clr = clrBl
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void DrawArrowXL(string name, int shift, double price, int arrow_code = 108, int arrow_width = 3, color clr = clrBlue)
+void DrawCheckMark(string name, int shift, double price, int arrow_width = 3, color clr = clrBlue)
   {
    if(Bars(NULL, 0) - 1 < shift)
       return;
@@ -77,12 +77,36 @@ void DrawArrowXL(string name, int shift, double price, int arrow_code = 108, int
       ObjectDelete(0, EMAName);
      }
    ObjectCreate(0, EMAName, OBJ_ARROW_CHECK, 0, iTime(NULL, 0, shift), price);
-   ObjectSetInteger(0, EMAName, OBJPROP_ARROWCODE, arrow_code);
+//   ObjectSetInteger(0, EMAName, OBJPROP_ARROWCODE, arrow_code);
    ObjectSetInteger(0, EMAName, OBJPROP_WIDTH, arrow_width);
 //  ObjectCreate(EMAName,OBJ_ELLIPSE,0,iTime(NULL,0,shift),val0,iTime(NULL,0,shift),val0);
    ObjectSetInteger(0, EMAName, OBJPROP_COLOR, clr);
   }
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DrawArrowXL(string name, int shift, double price, int arrow_code = 108, int size = 10, color clr = clrBlue)
+  {
+   if(Bars(NULL, 0) - 1 < shift)
+      return;
+// print(__FUNCTION__,"Bars(NULL,0)="+ Bars(NULL,0));
+   string EMAName = name + (string)iTime(NULL, 0, shift);
+   if(ObjectFind(0, EMAName) >= 0)
+     {
+      ObjectDelete(0, EMAName);
+     }
+   bool ok;  
+   ok= ObjectCreate(0, EMAName, OBJ_TEXT, 0, iTime(NULL, 0, shift), price);
+   ok=   ObjectSetString(0, EMAName, OBJPROP_FONT, "Wingdings");
+   string txt = CharToString(arrow_code);
+    ok= ObjectSetString(0, EMAName, OBJPROP_TEXT, txt);
+    ok = ObjectSetInteger(0,name,OBJPROP_ANCHOR,0); 
+    ok = ObjectSetInteger(0,name,OBJPROP_BACK,true);
+    //ok= ObjectSetInteger(0, EMAName, OBJPROP_WIDTH, size);
+    ok= ObjectSetInteger(0, EMAName, OBJPROP_FONTSIZE, size);
+//  ObjectCreate(EMAName,OBJ_ELLIPSE,0,iTime(NULL,0,shift),val0,iTime(NULL,0,shift),val0);
+    ok= ObjectSetInteger(0, EMAName, OBJPROP_COLOR, clr);
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

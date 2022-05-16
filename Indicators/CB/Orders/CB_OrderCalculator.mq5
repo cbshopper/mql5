@@ -277,8 +277,11 @@ void HLine(string name, double P0, color clr, bool bold, bool selected = false)
       if(!ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_WIDTH, 3))  // Allow color change
          Print("ObjectSet(", name, ",OBJPROP_WIDTH) [1] failed: ", GetLastError());
      }
-   if(!ObjectSetText(WINDOW_MAIN, name, (string)P0, 10))
-      Print("ObjectSetText(", name, ") [3] failed: ", GetLastError());
+     
+    ObjectSetString(WINDOW_MAIN, name, OBJPROP_TEXT, (string)P0);
+   //if(!ObjectSetText(WINDOW_MAIN, name, (string)P0, 10,clr))
+   //   Print("ObjectSetText(", name, ") [3] failed: ", GetLastError());
+      
    ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_HIDDEN, 0);
    ObjectSetInteger(WINDOW_MAIN, name, OBJPROP_READONLY, 0);
    if(selected)

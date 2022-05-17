@@ -8,14 +8,14 @@
 #include <cb\CB_OrderMachine.mqh>
 
 
-extern  string comment="";
-extern double Lots=0.1;
-extern int   Diff=25;
-extern double Risk=1;
-extern double CRV=2;
-extern double Budget=10000;
-extern int Slippage = 3;
-extern int magicnumber=0;
+input  string comment="";
+input double Lots=0.25;
+input int   Diff=100;
+input double Risk=1;
+input double CRV=2;
+input double Budget=0;
+input int Slippage = 3;
+input int magicnumber=0;
 
 
 
@@ -43,28 +43,29 @@ int OnStart()
     Alert("Autotrade is NOT allowed.");
     return 0;
    }
-  
+   double lotvalue = Lots; 
    double minlots = MarketInfo(NULL,MODE_MINLOT);
-   if(Lots < minlots)
-      Lots = minlots;
+   if(lotvalue < minlots)
+      lotvalue = minlots;
    double realbudget = MathMin(AccountInfoDouble(ACCOUNT_BALANCE),AccountInfoDouble(ACCOUNT_EQUITY));   
-   if(Budget == 0 || Budget > realbudget)
-      Budget = realbudget;
+   double budget = Budget;
+   if(budget == 0 || budget > realbudget)
+      budget = realbudget;
       
    int mindiff = MarketInfo(NULL,MODE_STOPLEVEL);
    if (mindiff == 0) mindiff = 10;
    
-   Diff=CalculateDiff();
+   int diff=CalculateDiff();
    
-   if(Diff <= mindiff)
-      Diff = mindiff;
+   if(diff <= mindiff)
+      diff = mindiff;
 
-   double riskcaptial = Budget*Risk/100;
+   double riskcaptial = budget*Risk/100;
 
    int SL = calculateStopLossPoints(riskcaptial,Lots);
    int TP = SL*CRV;
 
-   string msg = StringFormat("Open Buystop/Sellstop Pair: %f Lots, Diff=%d, SL=%d, TP=%d ?",Lots,Diff,SL,TP);
+   string msg = StringFormat("Open Buystop/Sellstop Pair: %f Lots, Diff=%d, SL=%d, TP=%d ?",lotvalue,diff,SL,TP);
 
 //  if(MessageBox(msg,WindowExpertName(),MB_YESNO|MB_ICONQUESTION)!=IDYES)
 //     return(1);
@@ -75,23 +76,23 @@ int OnStart()
    double SLVal=0,TPVal=0;
 // open Buystop Order
    price=Ask();
-   openprice=NormalizeDouble(price+Diff*Point(),3);
+   openprice=NormalizeDouble(price+diff*Point(),3);
    if(SL > 0)
       SLVal =  NormalizeDouble(openprice-(SL+SPREAD)*Point(),3);
    if(TP > 0)
       TPVal =  NormalizeDouble(openprice+(TP+SPREAD)*Point(),3);
-   int ticket = OpenOrder(ORDER_TYPE_BUY_STOP,openprice,SLVal,TPVal);
+   int ticket = OpenOrder(ORDER_TYPE_BUY_STOP,lotvalue,openprice,SLVal,TPVal);
 
    if(ticket > 0)
      {
       // open Sellstop Order
       price=Bid() ;
-      openprice=NormalizeDouble(price-Diff*Point(),3);
+      openprice=NormalizeDouble(price-diff*Point(),3);
       if(SL > 0)
          SLVal =  NormalizeDouble(openprice+(SL+SPREAD)*Point(),3);
       if(TP > 0)
          TPVal =  NormalizeDouble(openprice-TP*Point(),3);
-      OpenOrder(ORDER_TYPE_SELL_STOP,openprice,SLVal,TPVal);
+      OpenOrder(ORDER_TYPE_SELL_STOP,lotvalue,openprice,SLVal,TPVal);
 
      }
 //----
@@ -104,7 +105,7 @@ int OnStart()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
+int OpenOrder(int ordermode, double lots, double openprice,double SLVal, double TPVal)
   {
     COrderMachine OM ;
    OM.Init();
@@ -112,7 +113,7 @@ int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
    Print(__FUNCTION__," Open Order mode=" + info);
    int ticket=OM.OrderSend(Symbol(),
                         ordermode,
-                        Lots,
+                        lots,
                         openprice,
                         Slippage,
                         SLVal,
@@ -126,6 +127,7 @@ int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
       int err = GetLastError();
       PrintError(" Open Order mode=" + info);
      }
+     /*
    else
      {
       if(OrderSelect(ticket))
@@ -147,6 +149,7 @@ int OpenOrder(int ordermode, double openprice,double SLVal, double TPVal)
          PrintError(" Select Order mode=" + info);
         }
      }
+     */
      OM.Deinit();
    
    return ticket;

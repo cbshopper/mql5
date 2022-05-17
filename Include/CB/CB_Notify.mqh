@@ -4,7 +4,7 @@
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2022 Christof Blank"
 #property link      "https://www.???.???"
-
+#include <CB/CB_Utils.mqh>
 input bool sendNotifies = true;
 //+------------------------------------------------------------------+
 datetime lastalert=TimeCurrent();
@@ -14,8 +14,6 @@ void DoAlert(int bar, string txt)
    datetime now = iTime(NULL,0,bar);
    if (now > lastalert)
    {
-   
-     string msgtxt = txt + ": " + Symbol() + " " + TimeToString(now);
      Alert(txt);
      lastalert=now;
    }
@@ -27,6 +25,7 @@ void DoNotify(int bar, string txt)
    datetime now = iTime(NULL,0,bar);
    if (now > lastnotification)
    {
+     
      SendNotification(txt);
      lastnotification=now;
      
@@ -36,6 +35,8 @@ void DoNotify(int bar, string txt)
 
 void DoAlertX(int bar, string txt)
 {
-  DoAlert(bar,txt);
-  DoNotify(bar,txt);
+  datetime now = iTime(NULL,0,bar);
+  string msgtxt = txt + ": " + Symbol() + " " + timeFrameToString(Period()) + " " + TimeToString(now);
+  DoAlert(bar,msgtxt);
+  DoNotify(bar,msgtxt);
 }

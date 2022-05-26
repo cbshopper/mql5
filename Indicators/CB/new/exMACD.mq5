@@ -112,13 +112,11 @@ int OnCalculate(const int rates_total,
    }
 //--- we can copy not all data
   int to_copy;
-  if(prev_calculated > rates_total || prev_calculated < 0)
-    to_copy = rates_total;
+  if(prev_calculated > rates_total || prev_calculated <= 0)
+    to_copy = rates_total-1;
   else
    {
-    to_copy = rates_total - prev_calculated;
-    if(prev_calculated > 0)
-      to_copy++;
+    to_copy = rates_total - prev_calculated+1;
    }
 //--- get Fast EMA buffer
   if(IsStopped()) // checking for stop flag
@@ -137,14 +135,9 @@ int OnCalculate(const int rates_total,
     return(0);
    }
 //---
-  int start;
-  if(prev_calculated == 0)
-    start = 0;
-  else
-    start = prev_calculated - 1;
-    start=0;
+  int start = to_copy-1;
 //--- calculate MACD
-  for(int i = start; i < rates_total-1 && !IsStopped(); i++)
+  for(int i = start; i >= 0 && !IsStopped(); i--)
    {
     ExtBuyBuffer[i] = EMPTY_VALUE;
     ExtSellBuffer[i] = EMPTY_VALUE;

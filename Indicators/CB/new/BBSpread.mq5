@@ -47,8 +47,8 @@ int OnInit()
   ArraySetAsSeries(BBMiddle, true);
   ArraySetAsSeries(BBLower, true);
   ArraySetAsSeries(BBUpper, true);
-  PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, 0);
-  PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, 0);
+  PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, EMPTY_VALUE);
+  PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, EMPTY_VALUE);
   BBPtr = iBands(NULL, PERIOD_CURRENT, ma_period, 0, deviation, PRICE_CLOSE);
 //--- indicator name
   string short_name = StringFormat("BBSpread(%d %2.2f)", ma_period, deviation);
@@ -80,13 +80,13 @@ int OnCalculate(const int rates_total,
     //    return(0);
    }
   int to_copy;
-  if(prev_calculated > rates_total || prev_calculated < 0)
-    to_copy = rates_total;
+  if(prev_calculated > rates_total || prev_calculated <= 0)
+    to_copy = rates_total-1;
   else
    {
-    to_copy = rates_total - prev_calculated;
-    if(prev_calculated > 0)
-      to_copy++;
+    to_copy = rates_total - prev_calculated+1;
+ //   if(prev_calculated > 0)
+  //    to_copy++;
    }
 //    to_copy=1000;
   if(IsStopped())
@@ -106,12 +106,13 @@ int OnCalculate(const int rates_total,
     Print("Getting BBUpper is failed! Error", GetLastError());
     return(0);
    }
-  int limit = BarsCalculated(BBPtr) - 2;
-   limit = to_copy - 2;
+ // int limit = BarsCalculated(BBPtr) - 2;
+ //  limit = to_copy - 2;
+  int limit = to_copy-1;
   for(int shift = limit; shift >= 0 ; shift--)
    {
-    SpreadGrowing[shift] = 0;
-    SpreadShrinking[shift] = 0;
+    SpreadGrowing[shift] = EMPTY_VALUE;
+    SpreadShrinking[shift] = EMPTY_VALUE;
     double diff0 = BBUpper[shift] - BBLower[shift];
     double diff1 = BBUpper[shift + 1] - BBLower[shift + 1];
     double deltadiff = diff0-diff1;
@@ -119,7 +120,7 @@ int OnCalculate(const int rates_total,
     
   //  SpreadShrinking[shift] = diff0;
     double val=diff0;
-    val=1;
+    val=0;  // show in den middle!!
     
     SpreadGrowing[shift] = val;
     if(diff0>=diff1)

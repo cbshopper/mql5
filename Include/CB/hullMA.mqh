@@ -29,6 +29,7 @@ private :
    int               hull_perid;
    double            hull_divisor;
    ENUM_APPLIED_PRICE m_price;
+   ENUM_TIMEFRAMES  m_period;
    int              HmaPeriod  ;
    int               HalfPeriod;
    int                SqrtPeriod ;
@@ -61,10 +62,11 @@ public :
      }
 
    // double            Values[];
-   bool              init(int period, double divisor, ENUM_APPLIED_PRICE price)
+   bool              init(int period, double divisor, ENUM_APPLIED_PRICE price, ENUM_TIMEFRAMES tf = PERIOD_CURRENT)
      {
       hull_perid = period;
       m_price = price;
+      m_period = tf;
       hull_divisor = divisor;
       HmaPeriod  = (int)fmax(hull_perid, 2);
       HalfPeriod = (int)floor(HmaPeriod / hull_divisor);
@@ -153,7 +155,7 @@ public :
       double ret = 0;
       if(shift < 0)
          return 0;
-      long copied = CopyRates(Symbol(), 0, shift, priceCount, rates);
+      long copied = CopyRates(Symbol(), m_period, shift, priceCount, rates);
       if(copied >= priceCount)
         {
          for(int i = 0; i < priceCount; i++)
@@ -178,7 +180,7 @@ public :
       ArrayResize(rates, priceCount + bars+1);
       if(shift < 0)
          return 0;
-      long copied = CopyRates(Symbol(), 0, shift, priceCount + bars, rates);
+      long copied = CopyRates(Symbol(), m_period, shift, priceCount + bars, rates);
       if(copied >= priceCount)
         {
          ArrayResize(values, bars);

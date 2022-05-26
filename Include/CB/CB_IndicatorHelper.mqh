@@ -22,10 +22,10 @@ double GetIndicatorValue(int handle, int index)
 double GetIndicatorBufferValue(int handle, int index, int bufferno)
   {
    double ret = -1;
-   double vals[1];
+   double vals[2];
    int errno = 0;
   
-   if(CopyBuffer(handle, bufferno, index, 1, vals) > 0)
+   if(CopyBuffer(handle, bufferno, index, 2, vals) > 0)
      {
       ret = vals[0];
  //     Print(__FUNCTION__, " ret=", ret, "vals=", vals[0], " index=",index, " bufferno=",bufferno);

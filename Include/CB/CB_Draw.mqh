@@ -96,7 +96,7 @@ void DrawArrowXL(string name, int shift, double price, int arrow_code = 108, int
       ObjectDelete(0, EMAName);
      }
    bool ok;  
-   ok= ObjectCreate(0, EMAName, OBJ_TEXT, 0, iTime(NULL, 0, shift), price);
+   ok= ObjectCreate(0, EMAName, OBJ_TEXT, 0, iTime(NULL, 0, shift)+PeriodSeconds()/3, price);
    ok=   ObjectSetString(0, EMAName, OBJPROP_FONT, "Wingdings");
    string txt = CharToString(arrow_code);
     ok= ObjectSetString(0, EMAName, OBJPROP_TEXT, txt);

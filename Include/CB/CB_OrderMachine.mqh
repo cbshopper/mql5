@@ -765,10 +765,11 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
          //const string symbol,const ENUM_ORDER_TYPE order_type,const double volume,const double limit_price,
          //                const double price,const double sl,const double tp,
          //                 ENUM_ORDER_TYPE_TIME type_time,const datetime expiration,const string comment
-         ENUM_ORDER_TYPE_TIME type_time = ORDER_TIME_SPECIFIED;
-         if (expiration == 0)
+         ENUM_ORDER_TYPE_TIME type_time = ORDER_TIME_GTC; // ORDER_TIME_SPECIFIED;
+         
+         if (expiration > 0)
          {
-           type_time = ORDER_TIME_GTC;
+           type_time =ORDER_TIME_SPECIFIED ; // ORDER_TIME_GTC;
          }
          
          if(m_trade.OrderOpen(Symbol(), (ENUM_ORDER_TYPE)cmd, volume, price, price, stoploss, takeprofit, type_time, expiration, comment))
@@ -779,7 +780,7 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
          else
            {
             printf("Error opening pending %d position by %s : '%s'", cmd, Symbol(), m_trade.ResultComment());
-            printf("Open parameters : cmd=%d price=%f,SL=%f TP=%f Exp=%s", cmd, price, stoploss, takeprofit, TimeToString(expiration));
+            printf("Open parameters : cmd=%d price=%f, Lots=%f SL=%f TP=%f Exp=%s", cmd, price, volume,stoploss, takeprofit, TimeToString(expiration));
            }
         }
 //--- result

@@ -12,13 +12,26 @@ input  string comment="";
 input double Lots=0.25;
 input int   Diff=100;
 input double Risk=1;
-input double CRV=2;
+input double CRV=2;  // CRV Takeprofit. 0: no TP
 input double Budget=0;
 input int Slippage = 3;
 input int magicnumber=0;
 
-
-
+int CalculateDiff()
+{
+  int diff =Diff;
+  int digits = Digits();
+  switch (digits)
+  {
+     case 0: diff*=1; break;
+     case 1: diff*=10; break;
+     case 2: diff*=10; break;
+     case 3: diff*=10; break;
+     case 4: diff*=10; break;
+  }
+  return diff;
+}
+/*
 int CalculateDiff()
 {
   int diff =Diff;
@@ -28,11 +41,12 @@ int CalculateDiff()
      case 0: diff*=1; break;
      case 1: diff*=1; break;
      case 2: diff*=10; break;
-     case 3: diff*=100; break;
+     case 3: diff*=10; break;
      case 4: diff*=1000; break;
   }
   return diff;
 }
+*/
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -62,7 +76,7 @@ int OnStart()
 
    double riskcaptial = budget*Risk/100;
 
-   int SL = calculateStopLossPoints(riskcaptial,Lots);
+   int SL = calculateStopLossPoints(riskcaptial,lotvalue);
    int TP = SL*CRV;
 
    string msg = StringFormat("Open Buystop/Sellstop Pair: %f Lots, Diff=%d, SL=%d, TP=%d ?",lotvalue,diff,SL,TP);
@@ -109,7 +123,7 @@ int OpenOrder(int ordermode, double lots, double openprice,double SLVal, double 
   {
     COrderMachine OM ;
    OM.Init();
-   string info =  ordermode+ " Lots=" + Lots +" Price=" + openprice +" SL=" + SLVal + " TP=" +TPVal;
+   string info =  ordermode+ " Lots=" + lots +" Price=" + openprice +" SL=" + SLVal + " TP=" +TPVal;
    Print(__FUNCTION__," Open Order mode=" + info);
    int ticket=OM.OrderSend(Symbol(),
                         ordermode,
@@ -125,7 +139,7 @@ int OpenOrder(int ordermode, double lots, double openprice,double SLVal, double 
    if(ticket<1)
      {
       int err = GetLastError();
-      PrintError(" Open Order mode=" + info);
+      PrintError(" Open Order mode=" + info + " (" + err + ")");
      }
      /*
    else

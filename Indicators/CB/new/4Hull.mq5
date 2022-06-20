@@ -29,7 +29,7 @@ input ENUM_TIMEFRAMES TimeFrame3            = PERIOD_CURRENT;
 input ENUM_TIMEFRAMES TimeFrame4            = PERIOD_CURRENT;
 input int    HullPeriod            = 12;
 input int    HullPrice             =  5;
-input string UniqueID              = "4 Time hull trend";
+input string UniqueID              = "4xHMA Trend";
 input int    LinesWidth            =  0;
 input color  LabelsColor           = clrBlack;
 input int    LabelsHorizontalShift = 0;
@@ -216,9 +216,11 @@ int OnCalculate(const int rates_total,
     for(int k = 0; k < 4; k++)
      {
       int y = i;
+       int cnt = BarsCalculated(HullPtr[k]);
+            if (cnt <0 ) return 0;
       if(Period() != timeFrames[k])
        {
-        y = iBarShift(NULL, (ENUM_TIMEFRAMES)timeFrames[k], curtime, true) + 1;  //adjust color!
+        y = iBarShift(NULL, (ENUM_TIMEFRAMES)timeFrames[k], curtime, true);// + 1;  //adjust color!
         //      int error = GetLastError();
         //      Print(__FUNCTION__, " ERROR:", error, " - ", ErrorMsg(error));
        }

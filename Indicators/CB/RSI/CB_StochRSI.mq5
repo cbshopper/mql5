@@ -27,15 +27,15 @@
 //--- plot Main
 #property indicator_label1  "Value"
 #property indicator_type1   DRAW_LINE
-#property indicator_color1  clrDodgerBlue
+#property indicator_color1  clrDarkBlue
 #property indicator_style1  STYLE_SOLID
-#property indicator_width1  1
+#property indicator_width1  2
 //--- plot Signal
 #property indicator_label2  "Signal"
 #property indicator_type2   DRAW_LINE
-#property indicator_color2  clrRed
+#property indicator_color2  clrDarkRed
 #property indicator_style2  STYLE_SOLID
-#property indicator_width2  1
+#property indicator_width2  2
 
 
 input int                     InpStockKPeriod               = 3;                                   // K

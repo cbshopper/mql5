@@ -40,37 +40,41 @@ enum AlertLevelTYPES
 
 //
 input MATYPES MAType = EMA;
+input bool            MultiTimeFrames       = true;
 input ENUM_TIMEFRAMES TimeFrame1            = PERIOD_CURRENT;
 input ENUM_TIMEFRAMES TimeFrame2            = PERIOD_CURRENT;
 input ENUM_TIMEFRAMES TimeFrame3            = PERIOD_CURRENT;
 input ENUM_TIMEFRAMES TimeFrame4            = PERIOD_CURRENT;
-input int    HullPeriod            = 12; // Period
-input ENUM_APPLIED_PRICE HullPrice =  PRICE_TYPICAL;  // Price
+input int    MaPeriod1            = 12; // Period
+input int    MaPeriod2            = 24; // Period
+input int    MaPeriod3            = 50; // Period
+input int    MaPeriod4            = 100; // Period
+input ENUM_APPLIED_PRICE MaPrice =  PRICE_TYPICAL;  // Price
 input string UniqueID              = "4xMA Trend";
 input color  LabelsColor           = clrBlack;
 input int    LabelsHorizontalShift = 0;
 input double LabelsVerticalShift   = 0.0;
 input int    BarCount              = 10000;
-input bool   alertsOn              = false;
-input bool   arrowsOn              = true;
+input bool   DrawBuySellMarker              = true;
 input AlertLevelTYPES    alertsLevel           = TWO;  //Alerts Level: count of MA's 1..4
 #include <CB/CB_Notify.mqh>
 
 //
-double hulltre1u[];
-double hulltre1d[];
-double hulltre2u[];
-double hulltre2d[];
-double hulltre3u[];
-double hulltre3d[];
-double hulltre4u[];
-double hulltre4d[];
+double matre1u[];
+double matre1d[];
+double matre2u[];
+double matre2d[];
+double matre3u[];
+double matre3d[];
+double matre4u[];
+double matre4d[];
 double trendup[];
 double trenddn[];
 ENUM_TIMEFRAMES    timeFrames[4];
+int periods[4];
 int    limits[4];
 int    returnBarsArr[4];
-int    HullPtr[4];
+int    MaHandles[4];
 bool   returnBars;
 bool   calculateValue;
 string MAIndicatorFileName = "CB/ma/CB_Hull";
@@ -87,45 +91,45 @@ int alertsLevelINT = 0;
 //+------------------------------------------------------------------+
 int OnInit()
   {
-   IndicatorSetInteger(INDICATOR_DIGITS, _Digits);
-   ArraySetAsSeries(hulltre1u, true);
-   ArraySetAsSeries(hulltre1d, true);
-   ArraySetAsSeries(hulltre2u, true);
-   ArraySetAsSeries(hulltre2d, true);
-   ArraySetAsSeries(hulltre3u, true);
-   ArraySetAsSeries(hulltre3d, true);
-   ArraySetAsSeries(hulltre4u, true);
-   ArraySetAsSeries(hulltre4d, true);
+   IndicatorSetInteger(INDICATOR_DIGITS, 1);
+   ArraySetAsSeries(matre1u, true);
+   ArraySetAsSeries(matre1d, true);
+   ArraySetAsSeries(matre2u, true);
+   ArraySetAsSeries(matre2d, true);
+   ArraySetAsSeries(matre3u, true);
+   ArraySetAsSeries(matre3d, true);
+   ArraySetAsSeries(matre4u, true);
+   ArraySetAsSeries(matre4d, true);
    ArraySetAsSeries(trenddn, true);
-   ArraySetAsSeries(hulltre4d, true);
-   ArrayInitialize(hulltre1u, EMPTY_VALUE);
-   ArrayInitialize(hulltre1d, EMPTY_VALUE);
-   ArrayInitialize(hulltre2u, EMPTY_VALUE);
-   ArrayInitialize(hulltre2d, EMPTY_VALUE);
-   ArrayInitialize(hulltre3u, EMPTY_VALUE);
-   ArrayInitialize(hulltre3d, EMPTY_VALUE);
-   ArrayInitialize(hulltre4u, EMPTY_VALUE);
+   ArraySetAsSeries(matre4d, true);
+   ArrayInitialize(matre1u, EMPTY_VALUE);
+   ArrayInitialize(matre1d, EMPTY_VALUE);
+   ArrayInitialize(matre2u, EMPTY_VALUE);
+   ArrayInitialize(matre2d, EMPTY_VALUE);
+   ArrayInitialize(matre3u, EMPTY_VALUE);
+   ArrayInitialize(matre3d, EMPTY_VALUE);
+   ArrayInitialize(matre4u, EMPTY_VALUE);
    ArrayInitialize(trenddn, 0);
    ArrayInitialize(trendup, 0);
 //--- indicator buffers mapping
-   SetIndexBuffer(0, hulltre1u, INDICATOR_DATA);
-   SetIndexBuffer(1, hulltre1d, INDICATOR_DATA);
-   SetIndexBuffer(2, hulltre2u, INDICATOR_DATA);
-   SetIndexBuffer(3, hulltre2d, INDICATOR_DATA);
-   SetIndexBuffer(4, hulltre3u, INDICATOR_DATA);
-   SetIndexBuffer(5, hulltre3d, INDICATOR_DATA);
-   SetIndexBuffer(6, hulltre4u, INDICATOR_DATA);
-   SetIndexBuffer(7, hulltre4d, INDICATOR_DATA);
+   SetIndexBuffer(0, matre1u, INDICATOR_DATA);
+   SetIndexBuffer(1, matre1d, INDICATOR_DATA);
+   SetIndexBuffer(2, matre2u, INDICATOR_DATA);
+   SetIndexBuffer(3, matre2d, INDICATOR_DATA);
+   SetIndexBuffer(4, matre3u, INDICATOR_DATA);
+   SetIndexBuffer(5, matre3d, INDICATOR_DATA);
+   SetIndexBuffer(6, matre4u, INDICATOR_DATA);
+   SetIndexBuffer(7, matre4d, INDICATOR_DATA);
    SetIndexBuffer(8, trendup, INDICATOR_CALCULATIONS);
    SetIndexBuffer(9, trenddn, INDICATOR_CALCULATIONS);
-   PlotIndexSetString(0, PLOT_LABEL, "hulltre1u");
-   PlotIndexSetString(1, PLOT_LABEL, "hulltre1d");
-   PlotIndexSetString(2, PLOT_LABEL, "hulltre2u");
-   PlotIndexSetString(3, PLOT_LABEL, "hulltre2d");
-   PlotIndexSetString(4, PLOT_LABEL, "hulltre3u");
-   PlotIndexSetString(5, PLOT_LABEL, "hulltre3d");
-   PlotIndexSetString(6, PLOT_LABEL, "hulltre4u");
-   PlotIndexSetString(7, PLOT_LABEL, "hulltre4d");
+   PlotIndexSetString(0, PLOT_LABEL, "matre1u");
+   PlotIndexSetString(1, PLOT_LABEL, "matre1d");
+   PlotIndexSetString(2, PLOT_LABEL, "matre2u");
+   PlotIndexSetString(3, PLOT_LABEL, "matre2d");
+   PlotIndexSetString(4, PLOT_LABEL, "matre3u");
+   PlotIndexSetString(5, PLOT_LABEL, "matre3d");
+   PlotIndexSetString(6, PLOT_LABEL, "matre4u");
+   PlotIndexSetString(7, PLOT_LABEL, "matre4d");
 //
    for(int i = 0; i < 8; i++)
      {
@@ -138,9 +142,32 @@ int OnInit()
       timeFrames[0] = Period();
    else
       timeFrames[0] = TimeFrame1;
-   timeFrames[1] = NextTimeFrame(timeFrames[0], TimeFrame1);
-   timeFrames[2] = NextTimeFrame(timeFrames[1], TimeFrame2);
-   timeFrames[3] = NextTimeFrame(timeFrames[2], TimeFrame3);
+   if(MultiTimeFrames)
+     {
+      timeFrames[1] = NextTimeFrame(timeFrames[0], TimeFrame1);
+      timeFrames[2] = NextTimeFrame(timeFrames[1], TimeFrame2);
+      timeFrames[3] = NextTimeFrame(timeFrames[2], TimeFrame3);
+      periods[0] = MaPeriod1;
+      periods[1] = MaPeriod1;
+      periods[2] = MaPeriod1;
+      periods[3] = MaPeriod1;
+     }
+   else
+     {
+      timeFrames[1] = timeFrames[0];
+      timeFrames[2] = timeFrames[0];
+      timeFrames[3] = timeFrames[0];
+      periods[0] = MaPeriod1;
+      periods[1] = MaPeriod2;
+      periods[2] = MaPeriod3;
+      periods[3] = MaPeriod4;
+      if(MaPeriod2 == 0)
+         periods[1] = MaPeriod1;
+      if(MaPeriod3 == 0)
+         periods[2] = MaPeriod1;
+      if(MaPeriod4 == 0)
+         periods[3] = MaPeriod1;
+     }
    /* Parameters of CB_HULL
    input int                 HMAPeriod = 12;         // Period
    input ENUM_APPLIED_PRICE  InpMAPrice = 5;         // Price
@@ -153,33 +180,38 @@ int OnInit()
    switch(MAType)
      {
       case SMA:
-         HullPtr[0] = iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  HullPeriod, 0, MODE_SMA, HullPrice);
-         HullPtr[1] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  HullPeriod, 0, MODE_SMA, HullPrice);
-         HullPtr[2] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  HullPeriod, 0, MODE_SMA, HullPrice);
-         HullPtr[3] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  HullPeriod, 0, MODE_SMA, HullPrice);
+         MaHandles[0] = iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  periods[0], 0, MODE_SMA, MaPrice);
+         MaHandles[1] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  periods[1], 0, MODE_SMA, MaPrice);
+         MaHandles[2] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  periods[2], 0, MODE_SMA, MaPrice);
+         MaHandles[3] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  periods[3], 0, MODE_SMA, MaPrice);
          break;
       case EMA:
-         HullPtr[0] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  HullPeriod, 0, MODE_EMA, HullPrice);
-         HullPtr[1] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  HullPeriod, 0, MODE_EMA, HullPrice);
-         HullPtr[2] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  HullPeriod, 0, MODE_EMA, HullPrice);
-         HullPtr[3] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  HullPeriod, 0, MODE_EMA, HullPrice);
+         MaHandles[0] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  periods[0], 0, MODE_EMA, MaPrice);
+         MaHandles[1] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  periods[1], 0, MODE_EMA, MaPrice);
+         MaHandles[2] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  periods[2], 0, MODE_EMA, MaPrice);
+         MaHandles[3] =  iMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  periods[3], 0, MODE_EMA, MaPrice);
          break;
       case HULL:
-         HullPtr[0] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[0], MAIndicatorFileName,  HullPeriod, HullPrice, 2.0, 0, 0, 0);
-         HullPtr[1] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[1], MAIndicatorFileName,  HullPeriod, HullPrice, 2.0, 0, 0, 0);
-         HullPtr[2] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[2], MAIndicatorFileName,   HullPeriod, HullPrice, 2.0, 0, 0, 0);
-         HullPtr[3] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[3], MAIndicatorFileName,   HullPeriod, HullPrice, 2.0, 0, 0, 0);
+         MaHandles[0] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[0], MAIndicatorFileName,  periods[0], MaPrice, 2.0, 0, 0, 0);
+         MaHandles[1] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[1], MAIndicatorFileName,  periods[1], MaPrice, 2.0, 0, 0, 0);
+         MaHandles[2] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[2], MAIndicatorFileName,   periods[2], MaPrice, 2.0, 0, 0, 0);
+         MaHandles[3] = iCustom(NULL, (ENUM_TIMEFRAMES) timeFrames[3], MAIndicatorFileName,   periods[3], MaPrice, 2.0, 0, 0, 0);
          break;
       case AMA:
-         HullPtr[0] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  HullPeriod, 2, 30, 0, HullPrice);
-         HullPtr[1] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  HullPeriod, 2, 30, 0, HullPrice);
-         HullPtr[2] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  HullPeriod, 2, 30, 0, HullPrice);
-         HullPtr[3] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  HullPeriod, 2, 30, 0, HullPrice);
+         MaHandles[0] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[0],  periods[0], 2, 30, 0, MaPrice);
+         MaHandles[1] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[1],  periods[1], 2, 30, 0, MaPrice);
+         MaHandles[2] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[2],  periods[2], 2, 30, 0, MaPrice);
+         MaHandles[3] =  iAMA(NULL, (ENUM_TIMEFRAMES) timeFrames[3],  periods[3], 2, 30, 0, MaPrice);
          break;
      }
-// MaPtr = iMA(NULL, 0, 1, 0, MODE_SMA, HullPrice);
+     
+     if (MaHandles[1] == -1 ) MaHandles[1] = MaHandles[0];
+     if (MaHandles[2] == -1 ) MaHandles[2] = MaHandles[1];
+     if (MaHandles[3] == -1 ) MaHandles[3] = MaHandles[2];
+     
+// MaPtr = iMA(NULL, 0, 1, 0, MODE_SMA, MaPrice);
 // alertsLevel = MathMin(MathMax(alertsLevel, 3), 4);
-   UniqueIDName = UniqueID + " " + MAName(MAType) + "(" + HullPeriod + ")";
+   UniqueIDName = UniqueID + " " + MAName(MAType) + "(" + MaPeriod1 + ")";
    IndicatorSetString(INDICATOR_SHORTNAME, UniqueIDName);
    OnDeinit(0);
    initialized = false;
@@ -254,7 +286,7 @@ int OnCalculate(const int rates_total,
       int window = ChartWindowFind(0, UniqueIDName);
       for(int t = 0; t < 4; t++)
         {
-         string label = EnumToString(timeFrames[t]); // timeFrameToString(timeFrames[t]);
+         string label = EnumToString(timeFrames[t]) + "-" + periods[t]; // timeFrameToString(timeFrames[t]);
          string name = UniqueIDName + (string)t;
          bool ok = ObjectCreate(0, name, OBJ_TEXT, window,  iTime(NULL, 0, 1),  t + 1  + LabelsVerticalShift);
          ok = ObjectSetInteger(0, name, OBJPROP_COLOR, (int)LabelsColor);
@@ -284,12 +316,12 @@ int OnCalculate(const int rates_total,
          /*
            for(i = 0; i < 100; i++)
                 {
-                 if(BarsCalculated(HullPtr[k]) > 0)
+                 if(BarsCalculated(MaHandles[k]) > 0)
                      break;
                  Sleep(50);
                 }
                 */
-         int cnt = BarsCalculated(HullPtr[k]);
+         int cnt = BarsCalculated(MaHandles[k]);
          if(cnt < 0)
             return 0;
          if(Period() != timeFrames[k])
@@ -300,8 +332,8 @@ int OnCalculate(const int rates_total,
            }
          if(y > -1 && y < cnt - 1)
            {
-            val1 = GetIndicatorBufferValue(HullPtr[k],  y + 1, 0);;
-            val0 = GetIndicatorBufferValue(HullPtr[k], y, 0);;
+            val1 = GetIndicatorBufferValue(MaHandles[k],  y + 1, 0);;
+            val0 = GetIndicatorBufferValue(MaHandles[k], y, 0);;
             if(val1 < 0 || val0 < 0)
               {
                val0 = 0;
@@ -313,49 +345,49 @@ int OnCalculate(const int rates_total,
                case 0 :
                   if(isUp)
                     {
-                     hulltre1u[i] = k + 1;
-                     hulltre1d[i] = EMPTY_VALUE;
+                     matre1u[i] = k + 1;
+                     matre1d[i] = EMPTY_VALUE;
                     }
                   else
                     {
-                     hulltre1d[i] = k + 1;
-                     hulltre1u[i] = EMPTY_VALUE;
+                     matre1d[i] = k + 1;
+                     matre1u[i] = EMPTY_VALUE;
                     }
                   break;
                case 1 :
                   if(isUp)
                     {
-                     hulltre2u[i] = k + 1;
-                     hulltre2d[i] = EMPTY_VALUE;
+                     matre2u[i] = k + 1;
+                     matre2d[i] = EMPTY_VALUE;
                     }
                   else
                     {
-                     hulltre2d[i] = k + 1;
-                     hulltre2u[i] = EMPTY_VALUE;
+                     matre2d[i] = k + 1;
+                     matre2u[i] = EMPTY_VALUE;
                     }
                   break;
                case 2 :
                   if(isUp)
                     {
-                     hulltre3u[i] = k + 1;
-                     hulltre3d[i] = EMPTY_VALUE;
+                     matre3u[i] = k + 1;
+                     matre3d[i] = EMPTY_VALUE;
                     }
                   else
                     {
-                     hulltre3d[i] = k + 1;
-                     hulltre3u[i] = EMPTY_VALUE;
+                     matre3d[i] = k + 1;
+                     matre3u[i] = EMPTY_VALUE;
                     }
                   break;
                case 3 :
                   if(isUp)
                     {
-                     hulltre4u[i] = k + 1;
-                     hulltre4d[i] = EMPTY_VALUE;
+                     matre4u[i] = k + 1;
+                     matre4d[i] = EMPTY_VALUE;
                     }
                   else
                     {
-                     hulltre4d[i] = k + 1;
-                     hulltre4u[i] = EMPTY_VALUE;
+                     matre4d[i] = k + 1;
+                     matre4u[i] = EMPTY_VALUE;
                     }
                   break;
               }
@@ -373,7 +405,7 @@ int OnCalculate(const int rates_total,
          manageArrows(i);
         }
      }
-//  manageArrows();
+//manageArrows();
    manageAlerts();
 //--- return value of prev_calculated for next call
    return(rates_total);
@@ -435,24 +467,22 @@ string MAName(MATYPES type)
 //+------------------------------------------------------------------+
 void manageAlerts()
   {
-   if(alertsOn)
-     {
       int bar = 1;
       if(trendup[bar] >= alertsLevelINT)
          DoAlertX(bar, "4MA: BUY");
       if(trenddn[bar] >= alertsLevelINT)
          DoAlertX(bar, "4MA: SELL");
-     }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void manageArrows()
   {
-   if(arrowsOn)
+   if(DrawBuySellMarker)
      {
+      //   ObjectsDeleteAll(0, ARROW_NAME);
       //for(int bar = BarCount; bar >= 0; bar--)
-      for(int bar = 16; bar >= 0; bar--)
+      for(int bar = BarCount; bar >= 0; bar--)
         {
          manageArrows(bar);
         }
@@ -463,20 +493,24 @@ void manageArrows()
 //+------------------------------------------------------------------+
 void manageArrows(int bar)
   {
-   if(arrowsOn)
+   if(DrawBuySellMarker)
      {
       // Print(__FUNCTION__,": i=",bar," UpTrend=",trendup[bar], " DnTrend=",trenddn[bar]);
+      string upname = ARROW_NAME + "Up" + bar;
+      ObjectDelete(0, upname);
       if(((int)trendup[bar] & alertsLevelINT) == alertsLevelINT  && ((int)trendup[bar + 1] & alertsLevelINT) != alertsLevelINT)   //  trendup[bar] != trendup[bar + 1]) // trenddn[bar + 1] < alertsLevelINT)
         {
-         if(iOpen(NULL, PERIOD_CURRENT, bar + 1) < iClose(NULL, PERIOD_CURRENT, bar + 1))
-            DrawArrowXL(ARROW_NAME + "Up" + bar, bar + 1, iLow(NULL, 0, bar) - 100 * Point(), 108, 15, clrBlue);
+         //      if(iOpen(NULL, PERIOD_CURRENT, bar + 1) < iClose(NULL, PERIOD_CURRENT, bar + 1))
+         DrawArrowXL(upname, bar + 1, iLow(NULL, 0, bar) - 100 * Point(), 108, 15, clrBlue);
         }
-   int dn = trenddn[bar];
-      int t = dn & alertsLevelINT;
+      //  int dn = trenddn[bar];
+      //  int t = dn & alertsLevelINT;
+      string dnname = ARROW_NAME + "Dn" + bar;
+      ObjectDelete(0, dnname);
       if(((int)trenddn[bar] & alertsLevelINT)  == alertsLevelINT && ((int)trenddn[bar + 1] & alertsLevelINT) != alertsLevelINT)   // trendup[bar] != trendup[bar + 1] ) // trenddn[bar + 1] < alertsLevelINT)
         {
-         if(iOpen(NULL, PERIOD_CURRENT, bar + 1) > iClose(NULL, PERIOD_CURRENT, bar + 1))
-         DrawArrowXL(ARROW_NAME + "Dn" + bar, bar + 1, iHigh(NULL, 0, bar) + 100 * Point(), 108, 15, clrRed);
+         //      if(iOpen(NULL, PERIOD_CURRENT, bar + 1) > iClose(NULL, PERIOD_CURRENT, bar + 1))
+         DrawArrowXL(dnname + bar, bar + 1, iHigh(NULL, 0, bar) + 100 * Point(), 108, 15, clrRed);
         }
      }
   }

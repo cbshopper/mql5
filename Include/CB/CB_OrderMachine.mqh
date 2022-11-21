@@ -503,11 +503,11 @@ bool COrderMachine::  PositionClose(
    if(m_trade.PositionClose(ticket))
      {
       res = true;
-      printf("Long position by %s to be closed", Symbol());
+      printf("Long position by %s to be closed",m_trade.RequestSymbol());
      }
    else
      {
-      printf("Error closing position by %s : '%s'", Symbol(), m_trade.ResultComment());
+      printf("Error closing position by %s : '%s'", m_trade.RequestSymbol(), m_trade.ResultComment());
       //--- processed and cannot be modified
      }
 //--- result
@@ -604,24 +604,7 @@ bool COrderMachine::PositionModify(
   }
 
 
-/*
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-bool COrderMachine::PositionModify(int ticket, double slprice, double tpprice)
-{
- if(m_position.SelectByTicket(ticket))
-   {
-    if(m_trade.PositionModify(Symbol(), slprice, tpprice))
-       printf("position by %s to be modified", Symbol());
-    else
-      {
-       printf("Error modifying position by %s : '%s'", Symbol(), m_trade.ResultComment());
-       printf("Modify parameters : SL=%f,TP=%f", slprice, tpprice);
-      }
-   }
-}
-*/
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -639,11 +622,14 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
 //--- check for trailing stop
    if(stoploss > 0)
      {
-      m_symbol.Name(Symbol());
+      ;
       if(m_position.SelectByTicket(ticket))
         {
+         string symbol = m_position.Symbol();
+         m_symbol.Name(symbol);
          double tsval = m_adjusted_point * stoploss;
          double o_stoploss = m_position.StopLoss();
+         
          double tp = m_position.TakeProfit();
          if(m_position.PositionType() == POSITION_TYPE_BUY)
            {
@@ -657,11 +643,11 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
                  {
                   //--- modify position
                   // Print(__FUNCTION__," SELL Position:  sl=",sl," tp=",tp);
-                  if(m_trade.PositionModify(Symbol(), sl, tp))
-                     printf("Long position by %s to be modified", Symbol());
+                  if(m_trade.PositionModify(symbol, sl, tp))
+                     printf("Long position by %s to be modified", symbol);
                   else
                     {
-                     printf("Error modifying position by %s : '%s'", Symbol(), m_trade.ResultComment());
+                     printf("Error modifying position by %s : '%s'", symbol, m_trade.ResultComment());
                      printf("Modify parameters : SL=%f,TP=%f", sl, tp);
                     }
                   //--- modified and must exit from expert
@@ -681,11 +667,11 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
                  {
                   //--- modify position
                   //    Print(__FUNCTION__," SELL Position:  sl=",sl," tp=",tp);
-                  if(m_trade.PositionModify(Symbol(), sl, tp))
-                     printf("Short position by %s to be modified", Symbol());
+                  if(m_trade.PositionModify(symbol, sl, tp))
+                     printf("Short position by %s to be modified", symbol);
                   else
                     {
-                     printf("Error modifying position by %s : '%s'", Symbol(), m_trade.ResultComment());
+                     printf("Error modifying position by %s : '%s'", symbol, m_trade.ResultComment());
                      printf("Modify parameters : SL=%f,TP=%f", sl, tp);
                     }
                   //--- modified and must exit from expert
@@ -715,25 +701,25 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
                               datetime expiration = 0)      // pending order expiration
   {
    bool res = false;
-   m_symbol.Name(Symbol());
+   m_symbol.Name(symbol);
    m_trade.SetExpertMagicNumber(magic); // magic
 // long
    if(cmd == ORDER_TYPE_BUY)
      {
       //--- check for free money
-      if(m_account.FreeMarginCheck(Symbol(), ORDER_TYPE_BUY, volume, price) < 0.0)
+      if(m_account.FreeMarginCheck(symbol, ORDER_TYPE_BUY, volume, price) < 0.0)
          printf("We have no money. Free Margin = %f", m_account.FreeMargin());
       else
         {
          //--- open position
-         if(m_trade.PositionOpen(Symbol(), ORDER_TYPE_BUY, volume, price, stoploss, takeprofit, comment))
+         if(m_trade.PositionOpen(symbol, ORDER_TYPE_BUY, volume, price, stoploss, takeprofit, comment))
            {
-            printf("Position by %s to be opened", Symbol());
+            printf("Position by %s to be opened", symbol);
             res = true;
            }
          else
            {
-            printf("Error opening BUY position by %s : '%s'", Symbol(), m_trade.ResultComment());
+            printf("Error opening BUY position by %s : '%s'", symbol, m_trade.ResultComment());
             printf("Open parameters : price=%f,SL=%f TP=%f", price, stoploss, takeprofit);
            }
         }
@@ -743,19 +729,19 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
         {
          // short
          //--- check for free money
-         if(m_account.FreeMarginCheck(Symbol(), ORDER_TYPE_SELL, volume, price) < 0.0)
+         if(m_account.FreeMarginCheck(symbol, ORDER_TYPE_SELL, volume, price) < 0.0)
             printf("We have no money. Free Margin = %f", m_account.FreeMargin());
          else
            {
             //--- open position
-            if(m_trade.PositionOpen(Symbol(), ORDER_TYPE_SELL, volume, price, stoploss, takeprofit, comment))
+            if(m_trade.PositionOpen(symbol, ORDER_TYPE_SELL, volume, price, stoploss, takeprofit, comment))
               {
-               printf("Position by %s to be opened", Symbol());
+               printf("Position by %s to be opened", symbol);
                res = true;
               }
             else
               {
-               printf("Error opening SELL position by %s : '%s'", Symbol(), m_trade.ResultComment());
+               printf("Error opening SELL position by %s : '%s'",symbol, m_trade.ResultComment());
                printf("Open parameters : price=%f,SL=%f TP=%f", price, stoploss, takeprofit);
               }
            }
@@ -772,14 +758,14 @@ int COrderMachine:: OrderSend(string   symbol,               // symbol
            type_time =ORDER_TIME_SPECIFIED ; // ORDER_TIME_GTC;
          }
          
-         if(m_trade.OrderOpen(Symbol(), (ENUM_ORDER_TYPE)cmd, volume, price, price, stoploss, takeprofit, type_time, expiration, comment))
+         if(m_trade.OrderOpen(symbol, (ENUM_ORDER_TYPE)cmd, volume, price, price, stoploss, takeprofit, type_time, expiration, comment))
            {
-            printf("Position by %s to be opened", Symbol());
+            printf("Position by %s to be opened", symbol);
             res = true;
            }
          else
            {
-            printf("Error opening pending %d position by %s : '%s'", cmd, Symbol(), m_trade.ResultComment());
+            printf("Error opening pending %d position by %s : '%s'", cmd, symbol, m_trade.ResultComment());
             printf("Open parameters : cmd=%d price=%f, Lots=%f SL=%f TP=%f Exp=%s", cmd, price, volume,stoploss, takeprofit, TimeToString(expiration));
            }
         }
@@ -793,25 +779,27 @@ bool COrderMachine::PositionSetTPSL(int ticket, int sl, int tp)
   {
    string msg = "";
    bool ret = false;
-   m_symbol.Name(Symbol());
    if(m_position.SelectByTicket(ticket))
      {
+              string symbol = m_position.Symbol();
+         m_symbol.Name(symbol);
+ 
       //long ticket = (int) m_position.Ticket();
       double   tpval = m_position.TakeProfit();
       double   slval = m_position.StopLoss();
       if(m_position.PositionType() == POSITION_TYPE_BUY)
         {
          if(tp > 0)
-            tpval = NormalizeDouble(m_symbol.Ask() + tp * Point(), Digits());
+            tpval = NormalizeDouble(m_symbol.Ask() + tp * m_symbol.Point(),m_symbol.Digits());
          if(sl > 0)
-            slval    = NormalizeDouble(m_symbol.Bid() - sl * Point(), Digits());
+            slval    = NormalizeDouble(m_symbol.Bid() - sl * m_symbol.Point(),m_symbol.Digits());
         }
       if(m_position.PositionType() == POSITION_TYPE_SELL)
         {
          if(tp > 0)
-            tpval = NormalizeDouble(m_symbol.Bid() - tp * Point(), Digits());
+            tpval = NormalizeDouble(m_symbol.Bid() - tp * m_symbol.Point(),m_symbol.Digits());
          if(sl > 0)
-            slval = NormalizeDouble(m_symbol.Ask() + sl * Point(), Digits());
+            slval = NormalizeDouble(m_symbol.Ask() + sl * m_symbol.Point(),m_symbol.Digits());
         }
       // delete
       if(sl < 0)
@@ -820,12 +808,12 @@ bool COrderMachine::PositionSetTPSL(int ticket, int sl, int tp)
          tpval = 0;
       if(m_trade.PositionModify(m_position.Ticket(), sl, tp))
         {
-         printf("Long position by %s to be modified", Symbol());
+         printf("Long position by %s to be modified", symbol);
          ret = true;
         }
       else
         {
-         printf("Error modifying position by %s : '%s'", Symbol(), m_trade.ResultComment());
+         printf("Error modifying position by %s : '%s'", symbol, m_trade.ResultComment());
          printf("Modify parameters : SL=%f,TP=%f", sl, tp);
         }
      }
@@ -843,10 +831,11 @@ bool COrderMachine::OrderModify(int ticket, double price, int stoploss, int take
    double sellTPPrice = 0;
    int error;
    bool ret = false;
-   m_symbol.Name(Symbol());
+  
    if(m_order.Select(ticket))
      {
       string symbol        = m_order.Symbol();
+       m_symbol.Name(symbol);
       double open_price    = m_order.PriceOpen();
       double   tp = m_order.TakeProfit();
       double   sl = m_order.StopLoss();
@@ -860,7 +849,7 @@ bool COrderMachine::OrderModify(int ticket, double price, int stoploss, int take
         }
       if(price > 0)
          open_price = price;
-      double pp = Point();
+      double pp = m_symbol.Point();
       // pp = MarketInfo(OrderSymbol(),MODE_POINT);
       if(stoploss > 0)
         {
@@ -932,10 +921,11 @@ bool COrderMachine::OrderModify(int ticket, double price, double stopprice, doub
    double TPPrice = 0;
    int error;
    bool ret = false;
-   m_symbol.Name(Symbol());
    if(m_order.Select(ticket))
      {
       string symbol        = m_order.Symbol();
+         m_symbol.Name(symbol);
+
       double open_price    = m_order.PriceOpen();
       double   takeprofit = m_order.TakeProfit();
       double   stoploss = m_order.StopLoss();

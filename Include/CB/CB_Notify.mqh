@@ -5,12 +5,14 @@
 #property copyright "Copyright 2022 Christof Blank"
 #property link      "https://www.???.???"
 #include <CB/CB_Utils.mqh>
-input bool sendNotifies = true;
+input bool AlertsOn = false;
+input bool sendNotifies = false;
+
 //+------------------------------------------------------------------+
 datetime lastalert=TimeCurrent();
 void DoAlert(int bar, string txt)
 {
-   if (!sendNotifies) return;
+   if (!AlertsOn) return;
    datetime now = iTime(NULL,0,bar);
    if (now > lastalert)
    {

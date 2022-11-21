@@ -427,6 +427,7 @@ bool CTrade::PositionClose(const string symbol,const ulong deviation)
       m_request.volume   =PositionGetDouble(POSITION_VOLUME);
       m_request.magic    =m_magic;
       m_request.deviation=(deviation==ULONG_MAX) ? m_deviation : deviation;
+      m_request.position =PositionGetInteger(POSITION_TICKET);
       //--- check volume
       double max_volume=SymbolInfoDouble(symbol,SYMBOL_VOLUME_MAX);
       if(m_request.volume>max_volume)
@@ -438,10 +439,7 @@ bool CTrade::PositionClose(const string symbol,const ulong deviation)
          partial_close=false;
       //--- hedging? just send order
       if(IsHedging())
-        {
-         m_request.position=PositionGetInteger(POSITION_TICKET);
          return(OrderSend(m_request,m_result));
-        }
       //--- order send
       if(!OrderSend(m_request,m_result))
         {

@@ -9,6 +9,8 @@
 #property strict
 #property script_show_inputs
 #define SCRIPT
+input bool             AllSymbols = true;
+
 #include "..\..\..\Experts\CB\AutoClose\CB_TrailingStop.mq5"
 //+------------------------------------------------------------------+
 //| Script program start function                                    |

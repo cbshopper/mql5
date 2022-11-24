@@ -13,79 +13,31 @@ ENUM_APPLIED_PRICE      InpRSIAppliedPrice            = PRICE_CLOSE;            
 //+------------------------------------------------------------------+
 
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------
-int CalcValues2(int limit, double &RSIBuf[], double &StochBuf[], double &KBuf[], double &DBuf[])
-   {
-    InpStochastikPeriod = InpRSIPeriod;
-    const int rates_total = limit;
-    ArrayResize(StochBuf, limit);
-    ArrayResize(KBuf, limit);
-    ArrayResize(DBuf, limit);
-    ArraySetAsSeries(StochBuf, true);
-    ArraySetAsSeries(KBuf, true);
-    ArraySetAsSeries(DBuf, true);
 
-    ArrayInitialize(KBuf, EMPTY_VALUE);
-    ArrayInitialize(DBuf, EMPTY_VALUE);
-
-    for(int i = limit-1; i >= 0; i--)
-       {
-        //   if(i < rates_total - (InpRSIPeriod + 2))
-        StochBuf[i] = Stoch(RSIBuf, RSIBuf, RSIBuf, InpStochastikPeriod, i, rates_total);
-        Print(__FUNCTION__, ": i=", i, " StochBuf[i]=", StochBuf[i], " RSIBuf=", RSIBuf[i]);
-       }
-    for(int i = limit-1; i >= 0; i--)
-        //   for(int i = 0; i < limit; i++)
-       {
-        //   if(i < rates_total - (InpRSIPeriod + 2))
-        //  StochBuf[i] = Stoch(RSIBuf, RSIBuf, RSIBuf, InpStochastikPeriod, i, rates_total);
-        if(i <  rates_total - InpStockKPeriod + 1)
-            if(StochBuf[i + InpStockKPeriod - 1] != EMPTY_VALUE)
-                KBuf[i] = SimpleMA(i, InpStockKPeriod, StochBuf, rates_total);
-        if(i <  rates_total - InpStockDPeriod + 1)
-            if(KBuf[i + InpStockDPeriod - 1] != EMPTY_VALUE)
-                DBuf[i] = SimpleMA(i, InpStockDPeriod, KBuf, rates_total);
-        Print(__FUNCTION__, ": i=", i, " StochBuf[i]=", StochBuf[i], " KBuf[i]=", KBuf[i], " DBuf[i]=", DBuf[i]);
-       }
-    return limit;
-   }
-
-
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 int CalcValues(int limit, double &rSIBuffer[], double &stochBuffer[], double &kBuffer[], double &dBuffer[])
    {
     InpStochastikPeriod = InpRSIPeriod;
-    const int rates_total = limit;
-    ArrayResize(stochBuffer, limit+1);
-    ArrayResize(kBuffer, limit+1);
-    ArrayResize(dBuffer, limit+1);
+    const int rates_total = limit + MathMax(InpRSIPeriod,InpStockKPeriod);
+    ArrayResize(stochBuffer, rates_total + 1);
+    ArrayResize(kBuffer, rates_total + 1);
+    ArrayResize(dBuffer, rates_total + 1);
     ArraySetAsSeries(stochBuffer, true);
     ArraySetAsSeries(kBuffer, true);
     ArraySetAsSeries(dBuffer, true);
-
+    ArrayInitialize(stochBuffer, EMPTY_VALUE);
     ArrayInitialize(kBuffer, EMPTY_VALUE);
     ArrayInitialize(dBuffer, EMPTY_VALUE);
 
-  
-//  for(int i = 0; i < limit; i++)
-    for(int i = limit - 1; i >= 0; i--)
+    for(int i = limit; i >= 0; i--)
        {
-        //   if(i < rates_total - (InpRSIPeriod + 2))
-        stochBuffer[i] = Stoch(rSIBuffer, rSIBuffer, rSIBuffer, InpStochastikPeriod, i, rates_total);
-        if(i <  rates_total - InpStockKPeriod + 1)
- //           if(stochBuffer[i + InpStockKPeriod - 1] != EMPTY_VALUE)
-                kBuffer[i] = SimpleMA(i, InpStockKPeriod, stochBuffer, rates_total);
-        if(i <  rates_total - InpStockDPeriod + 1)
- //           if(kBuffer[i + InpStockDPeriod - 1] != EMPTY_VALUE)
-                dBuffer[i] = SimpleMA(i, InpStockDPeriod, kBuffer, rates_total);
+   //     if(i < rates_total - (InpRSIPeriod + 1))
+            stochBuffer[i] = Stoch(rSIBuffer, rSIBuffer, rSIBuffer, InpStochastikPeriod, i, rates_total);
 
-        //    if(i <  rates_total - MathMax(InpStockKPeriod, InpStockDPeriod) + 1)
-        //        Print(__FUNCTION__, ": i=", i, " stochBuffer[i]=", stochBuffer[i], " kBuffer[i]=", kBuffer[i], " dBuffer[i]=", dBuffer[i]);
+   //     if(stochBuffer[i + InpStockKPeriod - 1] != EMPTY_VALUE)
+            kBuffer[i] = SimpleMA(i, InpStockKPeriod, stochBuffer, rates_total);
+
+   //     if(kBuffer[i + InpStockDPeriod - 1] != EMPTY_VALUE)
+            dBuffer[i] = SimpleMA(i, InpStockDPeriod, kBuffer, rates_total);
        }
     return limit;
    }

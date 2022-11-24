@@ -7,6 +7,8 @@
 //#include <CB/CB_Notify.mqh>
 #include <CB/CB_IndicatorHelper.mqh>
 
+
+
 #define MARKER_LABEL "sigSTORSI"
 
 #property version   "1.00"
@@ -15,7 +17,7 @@
 #property indicator_minimum 0
 #property indicator_maximum 100
 #property indicator_buffers 4
-#property indicator_plots  2
+#property indicator_plots  4
 #property indicator_level1     20.0
 #property indicator_level2     80.0
 #property indicator_levelcolor clrSilver
@@ -45,8 +47,17 @@
 #property indicator_style4  STYLE_SOLID
 #property indicator_width4  2
 
+#define USEINC
+
 
 #include <CB/calcrsisto.mqh>
+
+//input int                     InpStockKPeriod               = 3;                                   // K
+//input int                     InpStockDPeriod               = 3;                                   // D
+//input int                     InpRSIPeriod                  = 14;                                  // RSI Period
+//int                     InpStochastikPeriod           = 14;                                  // Stochastic Period
+//ENUM_APPLIED_PRICE      InpRSIAppliedPrice            = PRICE_CLOSE;                         // RSI Applied Price
+
 //+------------------------------------------------------------------+
 //| Global Variables                                                 |
 //+------------------------------------------------------------------+
@@ -69,10 +80,10 @@ int OnInit()
 //--- getting RSI handle
     RSIHandle = iRSI(Symbol(), PERIOD_CURRENT, InpRSIPeriod, InpRSIAppliedPrice);
 //--- setting the arrays in timeseries
-ArraySetAsSeries(KBuffer, true);
-ArraySetAsSeries(DBuffer, true);
-ArraySetAsSeries(RSIBuffer, true);
-ArraySetAsSeries(StochBuffer, true);
+    ArraySetAsSeries(KBuffer, true);
+    ArraySetAsSeries(DBuffer, true);
+    ArraySetAsSeries(RSIBuffer, true);
+    ArraySetAsSeries(StochBuffer, true);
 //---
     return(INIT_SUCCEEDED);
    }
@@ -125,38 +136,38 @@ int OnCalculate(const int rates_total,
     int limit = prev_calculated == 0 ? rates_total - (InpRSIPeriod + 1) : rates_total - prev_calculated + 1;
 //if(limit > rates_total - InpRSIPeriod + 1)
 //    limit =  rates_total - InpRSIPeriod + 1;
-    Print(__FUNCTION__, ": ************** limit=", limit, " prev_calculated=", prev_calculated, " rates_total=", rates_total, " calculated=", calculated, " to_copy=", to_copy, " ret=", ret);
-// for(int i = limit; i >= 0; i--)
-    /*
-    limit -=1;
+ //   Print(__FUNCTION__, ": ************** limit=", limit, " prev_calculated=", prev_calculated, " rates_total=", rates_total, " calculated=", calculated, " to_copy=", to_copy, " ret=", ret);
+
+
+#ifdef USEINC
     double SB[], KB[], DB[];
     CalcValues(limit, RSIBuffer, SB, KB, DB);
-    for(int i = 0; i < limit; i++)
+    for(int i = limit; i >= 0; i--)
        {
         StochBuffer[i] = SB[i];
         KBuffer[i] = KB[i];
         DBuffer[i] = DB[i];
-        Print(__FUNCTION__, ": i=", i, " stochBuffer[i]=", StochBuffer[i], " KBuffer[i]=", KBuffer[i], " DBuffer[i]=", DBuffer[i], " Time=", iTime(Symbol(),PERIOD_CURRENT,i));
+   //     Print(__FUNCTION__, ": i=", i,  " RSIBuffer=", RSIBuffer[i], " StochBuffer[i]=", StochBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
+   //     Print(__FUNCTION__, ": i=", i,  " Value[i]=", KBuffer[i], " Signal[i]=", DBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
        }
-       */
+#else
 
-//  for(int i = 0; i < limit; i++)
     for(int i = limit; i >= 0; i--)
        {
         if(i < rates_total - (InpRSIPeriod + 1))
             StochBuffer[i] = Stoch(RSIBuffer, RSIBuffer, RSIBuffer, InpStochastikPeriod, i, rates_total);
 
         //      if(i <  rates_total - InpStockKPeriod + 1)
-        if(StochBuffer[i + InpStockKPeriod - 1] != EMPTY_VALUE)
+       if(StochBuffer[i + InpStockKPeriod - 1] != EMPTY_VALUE)
             KBuffer[i] = SimpleMA(i, InpStockKPeriod, StochBuffer, rates_total);
         //      if(i <  rates_total - InpStockDPeriod + 1)
-        if(KBuffer[i + InpStockDPeriod - 1] != EMPTY_VALUE)
+    if(KBuffer[i + InpStockDPeriod - 1] != EMPTY_VALUE)
             DBuffer[i] = SimpleMA(i, InpStockDPeriod, KBuffer, rates_total);
-        Print(__FUNCTION__, ": i=", i,  " RSIBuffer=", RSIBuffer[i], " StochBuffer[i]=", StochBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
-        Print(__FUNCTION__, ": i=", i,  " Value[i]=", KBuffer[i], " Signal[i]=", DBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
+  //      Print(__FUNCTION__, ": i=", i,  " RSIBuffer=", RSIBuffer[i], " StochBuffer[i]=", StochBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
+  //      Print(__FUNCTION__, ": i=", i,  " Value[i]=", KBuffer[i], " Signal[i]=", DBuffer[i], " Time=", iTime(Symbol(), PERIOD_CURRENT, i));
 
        }
-
+#endif
 //--- return value of prev_calculated for next call
     return(rates_total);
    }

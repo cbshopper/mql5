@@ -1,15 +1,15 @@
 //+------------------------------------------------------------------+
-//|                                                       CBHull.mqh |
+//|                                                     Laquerre.mqh |
 //|                        Copyright 2021, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 #property copyright "Copyright 2021, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
-
+// C:\ProgrammeXL\Office\MetaTrader5.dev\MQL5\Include\CB\CBiLaquerre.mqh
 #include <Indicators\Indicator.mqh>
 //+------------------------------------------------------------------+
-//| Class CHull.                                                      |
-//| Purpose: Class of the "Moving Average" indicator.                |
+//| Class CiLaquerre.                                                      |
+//| Purpose: Class of the "Laquerre" indicator.                |
 //|          Derives from class CIndicator.                          |
 //+------------------------------------------------------------------+
 class CiLaquerre : public CIndicator

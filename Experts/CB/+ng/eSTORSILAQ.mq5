@@ -22,10 +22,10 @@ input int    MinBarBeforeClose = 5;
 input int    mytakeprofit = 500;
 input int    mystoploss = 30;
 
-#include "signals/sSTORSI.mqh"
+#include "signals/sSTORSILA.mqh"
 
 input int                  ma_period = 7;               // period of ma
-input int                  ma_shift = 0;                 // shift
+input int                  ma_shift = 0;                 // shift of ma
 input ENUM_MA_METHOD       ma_method = MODE_EMA;         // type of smoothing
 input ENUM_APPLIED_PRICE   applied_price = PRICE_CLOSE;  // type of price
 ENUM_TIMEFRAMES      period = PERIOD_CURRENT;      // timeframe
@@ -35,16 +35,18 @@ int cust_ptr = 0;
 
 
 CcbExpert  *cbexpert;
-CStochRSI *indicator;
+CStochRSILaq *indicator;
 int  ma_handle;
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 int Expert_OnInit(CcbExpert *expert)
    {
-    indicator = new CStochRSI();
+    indicator = new CStochRSILaq();
     indicator.Init();
     ma_handle = iMA(NULL, period, ma_period, ma_shift, ma_method, applied_price);
+ 
     expert.SetMaxSpread(100);
 //  expert.SetStopLossTicks(StopLoss);
     expert.SetMaxBuyPositions(MaxBuyOrder);
@@ -63,12 +65,7 @@ int Expert_OnInit(CcbExpert *expert)
 int GetOpenSignal(int shift)
    {
     int signal = 0;
-
-    
-    
     double ma0 =  GetIndicatorBufferValue(ma_handle, shift, 0);
- 
- 
     signal = indicator.GetSignal(shift);
     
     
@@ -146,15 +143,3 @@ int GetCloseSignal(int shift, int mode,  int ticket)
     return ret;
    }
 //+------------------------------------------------------------------+
- 
-  /*
-    double sto0  =  indicator.Value(shift + 0);
-    double sto1  =  indicator.Value(shift + 1);
-    double sto_sig0  =  indicator.Signal(shift + 0);
-    double sto_sig1  =  indicator.Signal(shift + 1);
-     Print(__FUNCTION__, " sto0=", sto0, " sto1=", sto1, " sto_sig0=", sto_sig0, " sto_sig1=", sto_sig1," shift=",shift);
-    
-    
-    enable_buy = sto0 > sto_sig0 && sto1 < sto_sig1 && sto0 < EntryLevel;
-    enable_sell = sto0 < sto_sig0 && sto1 > sto_sig1 && sto0 > 100 - EntryLevel;
- */

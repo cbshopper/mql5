@@ -22,8 +22,7 @@
 //| Parameter=Gamma,double,0.7,Gamma Value                           |
 //| Parameter=LoLevel,double,0.15,Lo Signal Level                    |
 //| Parameter=HiLevel,double,0.75,Hi Signal Level                    |
-//| Perameter=CalculationMode,int,0, Calculation Mode 0=up/lower Level. 1=Levelcross
-//| Parameter=patern_0 for Mode=0, patern_1 for Mode = 1
+//| Perameter=CalculationMode,int,0, Calculation Mode
 //+------------------------------------------------------------------+
 // wizard description end
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -164,35 +163,30 @@ int CSignalLaquerre::LongCondition(void)
 //+++ analyze positional relationship of the close price and the indicator at the first analyzed bar
    double val0 = LAQ(idx);
    double val1 = LAQ(idx+1);
-   double val2 = LAQ(idx+2);
-
-   double vals[10];
-   for (int i = idx,j=0; i < idx+5; i++,j++) vals[j] = LAQ(i);
 
    switch(m_calcmode)
      {
       case 0:
          if(val0 > m_hilevel)     // value is at upper level
            {
-            result=m_pattern_0;
-            //     m_base_price=0.0;
-           }
-         break;
-      case 1:
-         if(val2 < m_lolevel  && val1 < m_lolevel  && val0 > m_lolevel)    // value raises to upper level
-           {
-            if (FindHiLo(vals,false))
             result=m_pattern_1;
             //     m_base_price=0.0;
            }
          break;
-      //case 2:
-      //   if(val1 < m_lolevel  && val0 > m_lolevel)    // value raises to upper level
-      //     {
-      //      result=m_pattern_1;
-      //      //     m_base_price=0.0;
-      //     }
-      //   break;
+      case 1:
+         if(val1 < m_hilevel  && val0 > m_hilevel)    // value raises to upper level
+           {
+            result=m_pattern_1;
+            //     m_base_price=0.0;
+           }
+         break;
+      case 2:
+         if(val1 < m_lolevel  && val0 > m_lolevel)    // value raises to upper level
+           {
+            result=m_pattern_1;
+            //     m_base_price=0.0;
+           }
+         break;
      }
 
 
@@ -211,35 +205,29 @@ int CSignalLaquerre::ShortCondition(void)
    int idx   =StartIndex();
    double val0 = LAQ(idx);
    double val1 = LAQ(idx+1);
-   double val2 = LAQ(idx+2);
-  
-   double vals[10];
-   for (int i = idx,j=0; i < idx+5; i++,j++) vals[j] = LAQ(i);
-
     switch(m_calcmode)
      {
       case 0:
          if(val0 < m_lolevel)     // value is at upper level
            {
-            result=m_pattern_0;
+            result=m_pattern_1;
             //     m_base_price=0.0;
            }
          break;
       case 1:
-         if(val2 > m_hilevel  && val1 > m_hilevel  && val0 < m_hilevel)    // value raises to upper level
+         if(val1 > m_lolevel  && val0 < m_lolevel)    // value raises to upper level
            {
-            if (FindHiLo(vals,true))
-              result=m_pattern_1;
+            result=m_pattern_1;
             //     m_base_price=0.0;
            }
          break;
-      //case 2:
-      //   if(val1 > m_hilevel  && val0 < m_hilevel)    // value raises to upper level
-      //     {
-      //      result=m_pattern_1;
-      //      //     m_base_price=0.0;
-      //     }
-      //   break;
+      case 2:
+         if(val1 > m_hilevel  && val0 < m_hilevel)    // value raises to upper level
+           {
+            result=m_pattern_1;
+            //     m_base_price=0.0;
+           }
+         break;
      }
    if(result>0)
       Print(__FUNCTION__, ": result=",result);
@@ -249,21 +237,3 @@ int CSignalLaquerre::ShortCondition(void)
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 //+------------------------------------------------------------------+
-// Helper
-
-bool FindHiLo(double &arr[], bool hi)
-{
-   int cnt = ArraySize(arr);
-   for (int i = 0; i< cnt -1; i++)
-   {
-      if (hi)
-      {
-         if (arr[i] >= 0.95) return true;
-      }
-      else
-      {
-         if (arr[i] <= 0.05) return true;
-      }
-   }
-   return false;
-}

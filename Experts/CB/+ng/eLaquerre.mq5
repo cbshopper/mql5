@@ -8,6 +8,7 @@
 //#include <CB/hullMA.mqh>
 #include "common/CBcExpert.mqh"
 #include "common/CBEABody.mqh"
+#include <Expert\Signal\SignalLaquerre.mqh>
 
 #define EXPERT
 input  string SPEZIFIC = "--------  EA Settings -------------";
@@ -22,7 +23,7 @@ input int    MinBarBeforeClose = 5;
 input int    mytakeprofit = 500;
 input int    mystoploss = 30;
 
-#include "signals/sSTORSI.mqh"
+#include "signals/sLAQ.mqh"
 
 input int                  ma_period = 7;               // period of ma
 input int                  ma_shift = 0;                 // shift
@@ -35,15 +36,15 @@ int cust_ptr = 0;
 
 
 CcbExpert  *cbexpert;
-CStochRSI *indicator;
+CLaq *indicator;
 int  ma_handle;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 int Expert_OnInit(CcbExpert *expert)
    {
-    indicator = new CStochRSI();
-    indicator.Init();
+    indicator = new CLaq;
+    if (!indicator.Init()) return INIT_FAILED;
     ma_handle = iMA(NULL, period, ma_period, ma_shift, ma_method, applied_price);
     expert.SetMaxSpread(100);
 //  expert.SetStopLossTicks(StopLoss);
@@ -53,6 +54,10 @@ int Expert_OnInit(CcbExpert *expert)
     expert.SetMaxSellOrders(MaxSellOrder);
     expert.SetPendingOrderExpireBarCount(100);
     cbexpert = expert;
+    
+    
+    
+   
     return INIT_SUCCEEDED;
    }
 
@@ -70,7 +75,7 @@ int GetOpenSignal(int shift)
  
  
     signal = indicator.GetSignal(shift);
-    
+  //  ma0=0;
     
     int sl = StopLoss;
     int tp = TakeProfit;
@@ -79,11 +84,13 @@ int GetOpenSignal(int shift)
     if(signal > 0)
        {
         cbexpert.SetOrderValues(ORDER_TYPE_BUY_STOP, ma0,  sl, tp);
+   //      cbexpert.SetOrderValues(ORDER_TYPE_BUY, ma0,  sl, tp);
         //   cbexpert.CloseAllPositions(POSITION_TYPE_SELL);
        }
     if(signal < 0)
        {
-        cbexpert.SetOrderValues(ORDER_TYPE_SELL_STOP, ma0, sl, tp);
+   //     cbexpert.SetOrderValues(ORDER_TYPE_SELL, ma0, sl, tp);
+         cbexpert.SetOrderValues(ORDER_TYPE_SELL_STOP, ma0, sl, tp);
         //    cbexpert.CloseAllPositions(POSITION_TYPE_BUY);
        }
     return signal;
@@ -92,7 +99,7 @@ int GetOpenSignal(int shift)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int GetCloseSignalV2(int shift, int mode,  int ticket)
+int GetCloseSignalxxint (int shift, int mode,  int ticket)
    {
     if(TrailingStop > 0)
         cbexpert.SetTrailingStop(TrailingStop);
@@ -145,16 +152,3 @@ int GetCloseSignal(int shift, int mode,  int ticket)
        }
     return ret;
    }
-//+------------------------------------------------------------------+
- 
-  /*
-    double sto0  =  indicator.Value(shift + 0);
-    double sto1  =  indicator.Value(shift + 1);
-    double sto_sig0  =  indicator.Signal(shift + 0);
-    double sto_sig1  =  indicator.Signal(shift + 1);
-     Print(__FUNCTION__, " sto0=", sto0, " sto1=", sto1, " sto_sig0=", sto_sig0, " sto_sig1=", sto_sig1," shift=",shift);
-    
-    
-    enable_buy = sto0 > sto_sig0 && sto1 < sto_sig1 && sto0 < EntryLevel;
-    enable_sell = sto0 < sto_sig0 && sto1 > sto_sig1 && sto0 > 100 - EntryLevel;
- */

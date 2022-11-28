@@ -7,20 +7,21 @@
 
 input string INDICATOR_PARAMETR = "------- Indicator Parameter --------";
 input int                  EntryLevel = 25;              // Entry Level
-#include <CB/calcrsisto.mqh>
 
 //+---------------------------------- - +
 //| Indicator input parameters        |
 //+-----------------------------------+
 input double gamma = 0.7;
 input int HighLevel = 85;
-input int MiddleLevel = 50;
+ int MiddleLevel = 50;
 input int LowLevel = 15;
-//input bool DrawBuySellMarker = false;
-//input int checkbars = 5;
-//input int checkMaPeriod=5;
-//input ENUM_MA_METHOD checkMaMethod = MODE_EMA;
-//input ENUM_APPLIED_PRICE checkMaPrice = PRICE_CLOSE;
+
+input int                     InpStockKPeriod               = 3;                                   // K
+input int                     InpStockDPeriod               = 3;                                   // D
+input int                     InpRSIPeriod                  = 14;                                  // RSI Period
+
+
+#define CUSTOMNAME1  "CB\\RSI\\CB_StochRSISimple"
 #define CUSTOMNAME2  "CB\\Laguerre\\CB_laq"
 // C:\ProgrammeXL\Office\MetaTrader5.dev\MQL5\Indicators\CB\Laguerre\CB_colorlaguerre.mq5
 
@@ -31,13 +32,9 @@ class CStochRSILaq
    {
 
 protected:
-    int               RSIHandle;
-    int               CustHandle;
+    int               RSISTOHandle;
+    int               LAQHandle;
 
-    double           KBuffer[];
-    double           DBuffer[];
-    double           RSIBuffer[];
-    double           StochBuffer[];
 
 
 public:
@@ -46,65 +43,41 @@ public:
        {
 
 
-        ArraySetAsSeries(StochBuffer, true);
-        ArraySetAsSeries(KBuffer, true);
-        ArraySetAsSeries(DBuffer, true);
-        ArraySetAsSeries(RSIBuffer, true);
-        RSIHandle = iRSI(Symbol(), PERIOD_CURRENT, InpRSIPeriod, InpRSIAppliedPrice);
+        RSISTOHandle = iCustom(Symbol(), PERIOD_CURRENT, CUSTOMNAME1,
+                               InpStockKPeriod, InpStockDPeriod, InpRSIPeriod);
 
-        int rates = DoCalc(100);
+        LAQHandle = iCustom(Symbol(), PERIOD_CURRENT, CUSTOMNAME2,
+                            gamma, HighLevel, MiddleLevel, LowLevel);
 
 
-        CustHandle = iCustom(Symbol(), PERIOD_CURRENT, CUSTOMNAME2,
-                             gamma, HighLevel, MiddleLevel, LowLevel);
-
-
-        return (rates > 0);
+        return (LAQHandle > 0 && RSISTOHandle > 0);
        }
 
-    int              DoCalc(int cnt)
-       {
-        int               rates;
-        int              barcount;
 
-        barcount = iBars(Symbol(), PERIOD_CURRENT);
-        ArrayResize(RSIBuffer, barcount);
-
-        rates = CopyBuffer(RSIHandle, 0, 0, barcount, RSIBuffer);
-        //       Print(__FUNCTION__, ": rates=", rates);
-
-        if(cnt  < rates)
-            rates = cnt;
-        CalcValues(rates, RSIBuffer, StochBuffer, KBuffer, DBuffer);
-        return rates;
-       }
 
 
     double            Value(int shift)
        {
 
-        double ret = KBuffer[shift];
+        double ret  = GetIndicatorBufferValue(RSISTOHandle, shift, 0);
         return ret;
        }
     double            Signal(int shift)
        {
 
-        double ret = DBuffer[shift];
+        double ret = GetIndicatorBufferValue(RSISTOHandle, shift, 1);
         return ret;
        }
 
     double            LagVal(int shift)
        {
-        double ret = GetIndicatorBufferValue(CustHandle, shift, 0);
+        double ret = GetIndicatorBufferValue(LAQHandle, shift, 0);
         return ret;
        }
 
     int              GetSignal(int shift)
        {
-        bool enable_sell = false;
-        bool enable_buy = false;
 
-        DoCalc(100);
 
         double sto0  =  Value(shift + 0);
         double sto1  =  Value(shift + 1);
@@ -114,10 +87,22 @@ public:
         double laq1  =  LagVal(shift + 1);
         double laq2  =  LagVal(shift + 2);
         double laq3 =  LagVal(shift + 3);
-        bool buyok = laq0 < LowLevel || laq1 < LowLevel || laq2 < LowLevel || laq3 < LowLevel ;
-        bool sellok = laq0 > HighLevel || laq1 > HighLevel || laq2 > HighLevel || laq3 > HighLevel ;
-        enable_buy = sto0 > sto_sig0 && sto1 < sto_sig1 && sto0 < EntryLevel && buyok;
-        enable_sell = sto0 < sto_sig0 && sto1 > sto_sig1 && sto0 > 100 - EntryLevel && sellok;
+
+        bool buyok = laq0 < MiddleLevel || laq1 < MiddleLevel ;//|| laq2 < LowLevel || laq3 < LowLevel ;
+        bool sellok = laq0 > MiddleLevel || laq1 > MiddleLevel ; //|| laq2 > HighLevel || laq3 > HighLevel ;
+        buyok = sellok = true;
+
+        bool selllag = laq0 < HighLevel && (laq1 > HighLevel || laq2 > HighLevel);
+        bool buylaq  = laq0 > LowLevel && (laq1 < LowLevel || laq2 < LowLevel);
+
+
+        bool buyrsi = sto0 > sto_sig0 && sto1 < sto_sig1  && sto0 < EntryLevel;
+        bool sellrsi = sto0 < sto_sig0 && sto1 > sto_sig1 && sto0 > 100 - EntryLevel;
+
+
+        bool enable_buy = (buyrsi && buyok) || buylaq;
+        bool enable_sell = (sellrsi && sellok) || selllag;
+
         if(enable_buy)
             return 1;
         if(enable_sell)

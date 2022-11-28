@@ -15,8 +15,11 @@ input int         StartShift=1;
 input  double     Lots = 0.1;
 input double      TotalEquityRisk = 0.0;    //Total Equity Risk
 input bool        EtheryTick=false;
+input bool        DoNotAutoClose=false;
 
-CcbExpert MyExpert;
+
+//CcbExpert MyExpert;
+CcbExpert *MyExpert;
 
 
 // EA BASIC Functions ===============================================+
@@ -32,8 +35,12 @@ void OnTick()
 //+------------------------------------------------------------------+
 int  OnInit()
   {
-   CcbExpert * myexpert = GetPointer(MyExpert);
-   int ret = Expert_OnInit(myexpert);   
+
+   MyExpert = new CcbExpert();  
+  // CcbExpert * myexpert = GetPointer(MyExpert);
+  
+    
+    int ret = Expert_OnInit(MyExpert);   
    if(ret == INIT_SUCCEEDED)
      {
       Print(__FUNCTION__, ": ", __FILE__, " *****************************************************************************");
@@ -42,6 +49,7 @@ int  OnInit()
       MyExpert.SetLots(Lots);
       MyExpert.SetTotalEquityRisk(TotalEquityRisk);
       MyExpert.SetStartShift(StartShift);
+      MyExpert.SetAutoCloseOff(DoNotAutoClose);
 
 #ifdef TESTING
       EventSetTimer(2);

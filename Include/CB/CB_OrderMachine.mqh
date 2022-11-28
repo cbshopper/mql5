@@ -153,7 +153,7 @@ public:
       int total = PositionsTotal();
       int ticket = 0;
       int cnt = 0;
-      Print(__FUNCTION__, " total=", total);
+ //     Print(__FUNCTION__, " total=", total);
       for(cnt = 0; cnt < total; cnt++)
         {
          if((ticket = (int) PositionGetTicket(cnt)) > 0)
@@ -260,7 +260,9 @@ COrderMachine::~COrderMachine(void)
 //+------------------------------------------------------------------+
 bool COrderMachine::Init(void)
   {
+ 
 //--- initialize common information
+   m_symbol.Refresh();
    m_trade.SetMarginMode();
    m_trade.SetTypeFillingBySymbol(Symbol());
 //--- tuning for 3 or 5 digits
@@ -273,6 +275,8 @@ bool COrderMachine::Init(void)
 //---
 //--- succeed
    IsInitialized = true;
+   
+     Print(__FUNCTION__," m_adjusted_point=",m_adjusted_point);
    return(true);
   }
 
@@ -627,9 +631,12 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
         {
          string symbol = m_position.Symbol();
          m_symbol.Name(symbol);
+          stoploss = CheckStopLossPips(symbol, stoploss);
          double tsval = m_adjusted_point * stoploss;
-         double o_stoploss = m_position.StopLoss();
+        
          
+         double o_stoploss = m_position.StopLoss();
+          
          double tp = m_position.TakeProfit();
          if(m_position.PositionType() == POSITION_TYPE_BUY)
            {
@@ -639,7 +646,9 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
                //   if(m_symbol.Bid()-m_position.PriceOpen()>tsval)
               {
                double sl = NormalizeDouble(m_symbol.Bid() - tsval, m_symbol.Digits());
-               if(m_position.StopLoss() < sl || m_position.StopLoss() == 0.0)
+               
+               Print(__FUNCTION__, ": tsval=",tsval, " stoploss=",stoploss, " o_stoploss=", o_stoploss, " sl=",sl);
+               if(o_stoploss < sl ||o_stoploss == 0.0)   //2022-11-28 < ==> !=
                  {
                   //--- modify position
                   // Print(__FUNCTION__," SELL Position:  sl=",sl," tp=",tp);
@@ -663,7 +672,7 @@ bool COrderMachine::PositionSetStop(int ticket, int stoploss, int minwinticks)
                // if((m_position.PriceOpen()-m_symbol.Ask())>(tsval))
               {
                double sl = NormalizeDouble(m_symbol.Ask() + tsval, m_symbol.Digits());
-               if(m_position.StopLoss() > sl || m_position.StopLoss() == 0.0)
+               if(o_stoploss > sl || o_stoploss == 0.0)   //2022-11-28 > ==> !=
                  {
                   //--- modify position
                   //    Print(__FUNCTION__," SELL Position:  sl=",sl," tp=",tp);

@@ -17,7 +17,7 @@
 #property indicator_minimum 0
 #property indicator_maximum 100
 #property indicator_buffers 4
-#property indicator_plots  4
+#property indicator_plots  2
 #property indicator_level1     20.0
 #property indicator_level2     80.0
 #property indicator_levelcolor clrSilver
@@ -34,7 +34,7 @@
 #property indicator_color2  clrDarkRed
 #property indicator_style2  STYLE_SOLID
 #property indicator_width2  2
-
+/*
 #property indicator_label3  "RSI"
 #property indicator_type3   DRAW_LINE
 #property indicator_color3  clrGray
@@ -46,7 +46,7 @@
 #property indicator_color4  clrGreen
 #property indicator_style4  STYLE_SOLID
 #property indicator_width4  2
-
+*/
 #define USEINC
 
 
